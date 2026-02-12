@@ -4,6 +4,7 @@ return {
     formatters_by_ft = {
       cpp = { "clang_format" },
       c = { "clang_format" },
+      rust = { "rustfmt" },
     },
     formatters = {
       clang_format = {
