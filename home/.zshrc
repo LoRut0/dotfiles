@@ -1,12 +1,13 @@
+# ssh-agent eval for correct ssh work
+eval "$(ssh-agent -s)"
+clear
+
 fpath+=~/.zfunc
 # PATH changing
 export PATH=$HOME/.cargo/bin:$PATH
 export EDITOR=nvim
 
 # Created by newuser for 5.9
-# Completion sys
-source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
-source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 # Lines configured by zsh-newuser-install
 HISTFILE=~/.histfile
@@ -28,7 +29,13 @@ zstyle ':vcs_info:git:*' formats '%b'
 setopt PROMPT_SUBST
 PROMPT='%F{green}%n%f %F{blue}%~%f%F{red}${vcs_info_msg_0_:+ (${vcs_info_msg_0_})}%f> '
 
-source $HOME/.zsh-vi-mode/zsh-vi-mode.plugin.zsh
 
 # autoload vigo command from ~/.zfunc
 autoload -Uz vigo
+
+# Completion sys
+source $HOME/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
+source $HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+# zsh-vi-mode
+source $HOME/.zsh/zsh-vi-mode/zsh-vi-mode.plugin.zsh
+

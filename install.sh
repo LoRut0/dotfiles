@@ -21,6 +21,11 @@ done
 
 for file in $DOTFILES/home/.*; do
     name="$(basename "$file")"
+
+    if name==".config"; then
+        continue
+    fi
+
     target="$HOME/$name"
     if [ -e "$target" ]; then
         echo "Skipping $target (already exists)"

@@ -1,0 +1,38 @@
+set $mod Super
+set $term alacritty
+set $browser firefox
+set $explorer dolphin
+set $telegram ~/Telegram/Telegram
+set $menu wofi --show drun
+set $lock_cmd swaylock
+set $suspend_cmd 'systemctl suspend' 
+set $brightness_up 'brightnessctl s 1%+'
+set $brightness_down 'brightnessctl s 1%-'
+set $volume_up 'pactl set-sink-volume @DEFAULT_SINK@ +5%'
+set $volume_down 'pactl set-sink-volume @DEFAULT_SINK@ -5%'
+set $toggle_mute 'pactl set-sink-mute @DEFAULT_SINK@ toggle'
+set $toggle_mic_mute 'pactl set-source-mute @DEFAULT_SOURCE@ toggle'
+set $display_config wdisplays
+set $screenshot '$HOME/bin/ss'
+set $background_color '#74ccaf'
+
+default_border none
+
+exec ~/nekoray/nekobox
+
+exec wl-paste --type text --watch cliphist store # Stores only text data
+exec wl-paste --type image --watch cliphist store # Stores only image data
+exec waybar
+
+# idle and lock screen when timeout
+exec_always swayidle -w \
+    timeout 300 'swaylock -f -c 000000' \
+    timeout 600 'swaymsg "output * dpms off"' \
+    resume 'swaymsg "output * dpms on"' \
+    before-sleep 'swaylock -f -c 000000'
+
+include "bindings.conf"
+include "input_devices.conf"
+include "monitors.conf"
+include "xdg_desktop_portal.conf"
+include "keyboard_gigabyteG5.conf"
