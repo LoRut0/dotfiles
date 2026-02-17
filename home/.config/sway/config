@@ -1,5 +1,5 @@
 set $mod Super
-set $term alacritty
+set $term ~/.config/sway/scripts/term-here.sh
 set $browser firefox
 set $explorer dolphin
 set $telegram ~/Telegram/Telegram
@@ -13,23 +13,23 @@ set $volume_down 'pactl set-sink-volume @DEFAULT_SINK@ -5%'
 set $toggle_mute 'pactl set-sink-mute @DEFAULT_SINK@ toggle'
 set $toggle_mic_mute 'pactl set-source-mute @DEFAULT_SOURCE@ toggle'
 set $display_config wdisplays
-set $screenshot '$HOME/bin/ss'
+set $screenshot_full 'flameshot full -c -p ~/Pictures/Screenshots'
+set $screenshot_gui 'flameshot gui -c -p ~/Pictures/Screenshots'
 set $background_color '#74ccaf'
 
 default_border none
 
 exec ~/nekoray/nekobox
 
-exec wl-paste --type text --watch cliphist store # Stores only text data
-exec wl-paste --type image --watch cliphist store # Stores only image data
+exec wl-paste --watch cliphist store # Stores only text data
 exec waybar
 
 # idle and lock screen when timeout
-exec_always swayidle -w \
-    timeout 300 'swaylock -f -c 000000' \
-    timeout 600 'swaymsg "output * dpms off"' \
-    resume 'swaymsg "output * dpms on"' \
-    before-sleep 'swaylock -f -c 000000'
+# exec_always swayidle -w \
+#     timeout 300 'swaylock -f -c 000000' \
+#     timeout 600 'swaymsg "output * dpms off"' \
+#     resume 'swaymsg "output * dpms on"' \
+#     before-sleep 'swaylock -f -c 000000'
 
 include "bindings.conf"
 include "input_devices.conf"
