@@ -1,7 +1,7 @@
 set $mod Super
 set $term ~/.config/sway/scripts/term-here.sh
 set $browser firefox
-set $explorer dolphin
+set $explorer nautilus
 set $telegram ~/Telegram/Telegram
 set $menu wofi --show drun
 set $lock_cmd swaylock
