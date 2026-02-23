@@ -70,8 +70,10 @@
 		"format-ethernet": "{ifname}: {ipaddr}/{cidr} ",
 		"format-linked": "{ifname} (No IP) ",
 		"format-disconnected": "Disconnected ⚠",
-		"format-alt": "<span color='#589df6'></span> <span color='gray'>{essid}</span> {frequency} <span color='#589df6'>{signaldBm} dB</span> <span color='#589df6'>⇵</span> {bandwidthUpBits}/{bandwidthDownBits}",
-		"interval": 5
+		//"format-alt": "<span color='#589df6'></span> <span color='gray'>{essid}</span> {frequency} <span color='#589df6'>{signaldBm} dB</span> <span color='#589df6'>⇵</span> {bandwidthUpBits}/{bandwidthDownBits}",
+		"interval": 5,
+        "on-click": "alacritty -e nmtui",
+        "on-click-right": "nm-connection-editor"
 	},
 	"backlight": {
 		// "device": "acpi_video1",
@@ -80,31 +82,43 @@
 	},
 	"pulseaudio": {
 		// "scroll-step": 1, // %, can be a float
-		"format": "{icon} {volume}% {format_source}",
+		"format": "{icon} {volume}%",
 		"format-muted": "🔇 {format_source}",
-		"format-bluetooth": "{icon} {volume}% {format_source}",
-		"format-bluetooth-muted": "🔇 {format_source}",
 
 		"format-source": " {volume}%",
 		"format-source-muted": "",
 
 		"format-icons": {
 			"headphones": "",
-			"handsfree": "",
-			"headset": "",
-			"phone": "",
-			"portable": "",
-			"car": "",
 			"default": ["🔈", "🔉", "🔊"]
 		},
-		"on-click": "ponymix -N -t sink toggle",
-		"on-click-right": "ponymix -N -t source toggle"
+		"on-click": "pavucontrol",
+		"on-click-right": "helvum"
 	},
 	"clock": {
 		"interval": 1,
-		"format": "⏰ {:%H:%M:%S}",
-		"tooltip-format": "{:%Y-%m-%d | %H:%M:%S}"
-		// "format-alt": "{:%Y-%m-%d}"
+		"format": "⏰ {:%H:%M:%S|%d.%m.%y}",
+        "tooltip-format": "<tt><small>{calendar}</small></tt>",
+        "calendar": {
+            "mode"          : "year",
+            "mode-mon-col"  : 3,
+            "weeks-pos"     : "right",
+            "on-scroll"     : 1,
+            "format": {
+                "months":     "<span color='#ffead3'><b>{}</b></span>",
+                "days":       "<span color='#ecc6d9'><b>{}</b></span>",
+                "weeks":      "<span color='#99ffdd'><b>W{}</b></span>",
+                "weekdays":   "<span color='#ffcc66'><b>{}</b></span>",
+                "today":      "<span color='#ff6699'><b><u>{}</u></b></span>"
+            }
+        },
+        "actions":  {
+            "on-click-right": "mode",
+            "on-scroll-up": "tz_up",
+            "on-scroll-down": "tz_down",
+            "on-scroll-up": "shift_up",
+            "on-scroll-down": "shift_down"
+        }
 	},
 	"battery": {
 		"states": {
@@ -114,10 +128,10 @@
 		},
 		"format": "<span color='#e88939'>{icon}</span> {capacity}% ({time})",
 		"format-charging": "<span color='#e88939'> </span> {capacity}%",
-		"format-plugged":  "<span color='#e88939'>{icon} </span> {capacity}% ({time})",
+		"format-plugged":  "<span color='#e88939'>{icon}</span> {capacity}%",
 		// "format-good": "", // An empty format will hide the module
 		// "format-full": "",
-		"format-icons": ["", "", "", "", ""]
+		"format-icons": ["󱃍", "󱊡", "󱊢", "󱊣"]
 	},
 	"battery#bat2": {
 		"bat": "BAT2"

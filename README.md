@@ -5,4 +5,6 @@
 ```bash
 grim
 flameshot
+helvum
+pavucontrol
 ```
