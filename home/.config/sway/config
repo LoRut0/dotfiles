@@ -25,11 +25,11 @@ exec wl-paste --watch cliphist store # Stores only text data
 exec waybar
 
 # idle and lock screen when timeout
-# exec_always swayidle -w \
-#     timeout 300 'swaylock -f -c 000000' \
-#     timeout 600 'swaymsg "output * dpms off"' \
-#     resume 'swaymsg "output * dpms on"' \
-#     before-sleep 'swaylock -f -c 000000'
+exec_always swayidle -w \
+    timeout 300 'swaylock -f -c 000000' \
+    timeout 600 'swaymsg "output * dpms off"' \
+    resume 'swaymsg "output * dpms on"' \
+    before-sleep 'swaylock -f -c 000000'
 
 include "bindings.conf"
 include "input_devices.conf"

@@ -7,6 +7,9 @@ fpath+=~/.zfunc
 export PATH=$HOME/.cargo/bin:$PATH
 export EDITOR=nvim
 
+# starting firefox in wayland mode
+export MOZ_ENABLE_WAYLAND=1
+
 # Created by newuser for 5.9
 
 # Lines configured by zsh-newuser-install
