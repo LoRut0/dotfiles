@@ -6,7 +6,8 @@
     // Choose the order of the modules
     "modules-left": [
         "sway/workspaces",
-        "sway/mode"
+        "sway/mode",
+        "sway/window"
     ],
     // "modules-center": ["sway/window"],
     "modules-right": [
@@ -44,6 +45,11 @@
     // },
     "sway/mode": {
         "format": "{}"
+    },
+    "sway/window": {
+        "max-length": 80,
+        "format": "{}",
+        "tooltip": false
     },
     // "custom/arch_update": {
     // 	"format": "<span color='#589df6'></span>{}",
@@ -93,7 +99,7 @@
         "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{num_connections} connected\n\n{device_enumerate}",
         "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
         "tooltip-format-enumerate-connected-battery": "{device_alias}\t{device_address}\t{device_battery_percentage}%",
-        "on-click": "alacritty -e bluetui",
+        "on-click": "alacritty -e sh -c 'sleep 0.1; bluetui'"
     },
     "network": {
         "family": "ipv6",
@@ -104,7 +110,7 @@
         "format-disconnected": "Disconnected ⚠",
         //"format-alt": "<span color='#589df6'></span> <span color='gray'>{essid}</span> {frequency} <span color='#589df6'>{signaldBm} dB</span> <span color='#589df6'>⇵</span> {bandwidthUpBits}/{bandwidthDownBits}",
         "interval": 5,
-        "on-click": "alacritty -e nmtui",
+        "on-click": "alacritty -e sh -c 'sleep 0.1; nmtui'",
         "on-click-right": "nm-connection-editor"
     },
     "backlight": {

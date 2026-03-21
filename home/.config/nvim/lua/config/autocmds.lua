@@ -16,3 +16,11 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.opt_local.softtabstop = 2
   end,
 })
+
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "plantuml",
+  callback = function(args)
+    vim.bo[args.buf].makeprg = "java -jar ~/.local/bin/plantuml-1.2026.2.jar --svg -stdrpt:2 %"
+    vim.bo[args.buf].errorformat = "%f:%l:%*[^:]:%m"
+  end,
+})

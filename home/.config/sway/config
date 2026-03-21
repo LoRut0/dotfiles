@@ -16,6 +16,7 @@ set $display_config wdisplays
 set $screenshot_full 'flameshot full -c -p ~/Pictures/Screenshots'
 set $screenshot_gui 'flameshot gui -c -p ~/Pictures/Screenshots'
 set $background_color '#74ccaf'
+set $network-applet 'nm-applet'
 
 default_border none
 
@@ -23,6 +24,7 @@ exec ~/nekoray/nekobox
 
 exec wl-paste --watch cliphist store # Stores only text data
 exec waybar
+exec $network-applet
 
 # idle and lock screen when timeout
 exec_always swayidle -w \
