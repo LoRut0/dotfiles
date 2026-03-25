@@ -25,6 +25,7 @@ exec ~/nekoray/nekobox
 exec wl-paste --watch cliphist store # Stores only text data
 exec waybar
 exec $network-applet
+exec swaybg -i ~/wallpapers/wp initial-d-hd-wallpapers.jpg
 
 # idle and lock screen when timeout
 exec_always swayidle -w \

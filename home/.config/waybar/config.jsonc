@@ -47,8 +47,8 @@
         "format": "{}"
     },
     "sway/window": {
-        "max-length": 80,
-        "format": "{}",
+        "max-length": 60,
+        "format": " {title}",
         "tooltip": false
     },
     // "custom/arch_update": {
