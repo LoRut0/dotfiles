@@ -4,8 +4,9 @@ return {
     optional = true,
     opts = {
       keymap = {
-        ["<CR>"] = { "fallback" },
-        ["<Esc>"] = { "cancel", "fallback" },
+        -- ["<CR>"] = { "fallback" },
+        -- ["<Esc>"] = { "cancel", "fallback" },
+        ["<Esc>"] = { "fallback" },
 
         ["<C-space>"] = { "show", "show_documentation", "hide_documentation" },
         ["<C-e>"] = { "hide", "fallback" },

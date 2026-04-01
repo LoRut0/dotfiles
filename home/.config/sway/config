@@ -20,7 +20,7 @@ set $network-applet 'nm-applet'
 
 default_border none
 
-exec ~/nekoray/nekobox
+exec v2rayn
 
 exec wl-paste --watch cliphist store # Stores only text data
 exec waybar
