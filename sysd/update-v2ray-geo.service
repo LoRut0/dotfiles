@@ -1,0 +1,8 @@
+[Unit]
+Description=Update V2Ray geosite.dat and geoip.dat
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/update-v2ray-geo.sh

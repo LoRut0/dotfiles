@@ -28,11 +28,12 @@ exec $network-applet
 exec swaybg -i ~/wallpapers/wp initial-d-hd-wallpapers.jpg
 
 # idle and lock screen when timeout
-exec_always swayidle -w \
+exec swayidle -w \
     timeout 300 'swaylock -f -c 000000' \
     timeout 600 'swaymsg "output * dpms off"' \
     resume 'swaymsg "output * dpms on"' \
     before-sleep 'swaylock -f -c 000000'
+exec wayland-pipewire-idle-inhibit --media-minimum-duration 10
 
 include "bindings.conf"
 include "input_devices.conf"

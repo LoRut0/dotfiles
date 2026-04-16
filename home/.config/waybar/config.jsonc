@@ -190,7 +190,7 @@
             "activated": "",
             "deactivated": ""
         },
-        "on-click-right": "swaylock -eFfki ~/.config/lockscreen-origin.png"
+        "on-click-right": "swaylock -f -c 000000"
     },
     "tray": {
         // "icon-size": 21,

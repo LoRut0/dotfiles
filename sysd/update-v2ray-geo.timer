@@ -1,0 +1,11 @@
+[Unit]
+Description=Run V2Ray geo files updater every 10 hours
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=10h
+Persistent=true
+Unit=update-v2ray-geo.service
+
+[Install]
+WantedBy=timers.target
