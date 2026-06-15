@@ -1,0 +1,22 @@
+
+[mgr]
+prepend_keymap = [
+    { on   = [ "g", "i" ], run  = "plugin lazygit", desc = "run lazygit" }
+]
+append_keymap = [
+    {
+    on = [ "e" ],
+    run = "shell 'nvim \"$@\"' --block",
+    desc = "Edit with nvim"
+    },
+    {
+    on = [ "T" ],
+    run = 'shell "zsh" --block',
+    desc = "Open zsh here"
+    },
+    {
+    on = [ "Q" ],
+    run = [ "shell --block 'touch $YAZI_NO_CD_FILE'", "quit" ],
+    desc = "Quit without cd"
+    }
+]

@@ -1,0 +1,6 @@
+[mgr]
+show_hidden = true
+sort_by = "natural"
+sort_sensitive = false
+sort_reverse = false
+linemode = "none"

@@ -42,3 +42,25 @@ source $HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 # zsh-vi-mode
 source $HOME/.zsh/zsh-vi-mode/zsh-vi-mode.plugin.zsh
 
+export PATH="$HOME/.local/bin:$PATH"
+
+# proxy applies ONLY when launching claude or forge
+function claude() {
+  HTTP_PROXY=http://127.0.0.1:10809 \
+  HTTPS_PROXY=http://127.0.0.1:10809 \
+  command claude "$@"
+}
+function forge() {
+  HTTP_PROXY=http://127.0.0.1:10809 \
+  HTTPS_PROXY=http://127.0.0.1:10809 \
+  command forge "$@"
+}
+function y() {
+	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+	command yazi "$@" --cwd-file="$tmp"
+	IFS= read -r -d '' cwd < "$tmp"
+	[ "$cwd" != "$PWD" ] && [ -d "$cwd" ] && builtin cd -- "$cwd"
+	command rm -f -- "$tmp"
+}
+
+eval "$(zoxide init zsh)"
