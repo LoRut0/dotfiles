@@ -1,7 +1,9 @@
-
 [mgr]
 prepend_keymap = [
-    { on   = [ "g", "i" ], run  = "plugin lazygit", desc = "run lazygit" }
+    { on   = [ "g", "i" ], run  = "plugin lazygit", desc = "run lazygit" },
+    { on   = [ "g", "t" ], run  = "plugin toggle-pane min-preview", desc = "Show or hide the preview pane" },
+    { on   = [ "g", "T" ], run  = "plugin toggle-pane max-preview", desc = "Maximize or restore the preview pane" },
+    { on   = "f", run  = "plugin jump-to-char", desc = "Jump to char" }
 ]
 append_keymap = [
     {
