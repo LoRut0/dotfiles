@@ -3,7 +3,8 @@ prepend_keymap = [
     { on   = [ "g", "i" ], run  = "plugin lazygit", desc = "run lazygit" },
     { on   = [ "g", "t" ], run  = "plugin toggle-pane min-preview", desc = "Show or hide the preview pane" },
     { on   = [ "g", "T" ], run  = "plugin toggle-pane max-preview", desc = "Maximize or restore the preview pane" },
-    { on   = "f", run  = "plugin jump-to-char", desc = "Jump to char" }
+    { on   = "f", run  = "plugin jump-to-char", desc = "Jump to char" },
+    { on   = "d", run  = [ "escape --visual", "shell -- trashy put %s" ], desc = "Move selected files to the trash using trashy"},
 ]
 append_keymap = [
     {

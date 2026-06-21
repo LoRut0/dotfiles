@@ -9,6 +9,15 @@ return {
           },
         },
       },
+      -- clangd = {
+      --   cmd = {
+      --     "clangd",
+      --     "--background-index",
+      --     "--clang-tidy",
+      --     "--fallback-style=llvm",
+      --     "--tweaks=-std=c++23",
+      --   },
+      -- },
     },
   },
 }
