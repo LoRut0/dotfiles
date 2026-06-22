@@ -33,7 +33,8 @@ hl.workspace_rule({ workspace = "10", monitor = "DP-2" })
 
 -- old config variables ($terminal etc.) become plain Lua locals
 local terminal = "alacritty"
-local fileManager = "alacritty -e zsh /home/loruto/.config/hypr/yazi-open.sh"
+local fileManager = "dolphin"
+local yazi = "alacritty -e zsh /home/loruto/.config/hypr/yazi-open.sh"
 local menu = "wofi --show drun"
 
 -------------------
@@ -219,6 +220,7 @@ hl.bind(
 	hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'")
 )
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
+hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd(yazi))
 hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen({ mode = 0 }))
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen({ mode = 1 }))
 hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu))
