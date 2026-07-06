@@ -25,4 +25,7 @@ jadx
 
 # utility for updating pacman mirrors (sudo systemctl enable --now reflector.timer)
 reflector
+
+# conspectus
+obsidian
 ```

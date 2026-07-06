@@ -8,7 +8,7 @@
 
 -- See https://wiki.hypr.land/Configuring/Basics/Monitors/
 -- old: monitor = NAME, RESxREFRESH, POSITION, SCALE[, transform, N]
-hl.monitor({ output = "DP-3", mode = "1920x1080@143", position = "0x0", scale = 1 })
+hl.monitor({ output = "DP-3", mode = "1920x1080@144", position = "0x0", scale = 1 })
 hl.monitor({ output = "DP-2", mode = "1920x1080", position = "-1080x0", scale = 1, transform = 1 })
 hl.monitor({ output = "HDMI-A-1", mode = "1920x1080", position = "1920x0", scale = 1 })
 
@@ -230,6 +230,10 @@ hl.bind(mainMod .. " + H", hl.dsp.focus({ direction = "left" }))
 hl.bind(mainMod .. " + L", hl.dsp.focus({ direction = "right" }))
 hl.bind(mainMod .. " + K", hl.dsp.focus({ direction = "up" }))
 hl.bind(mainMod .. " + J", hl.dsp.focus({ direction = "down" }))
+
+-- Move active window left/right in the layout (swap tiles)
+hl.bind(mainMod .. " + SHIFT + H", hl.dsp.window.move({ direction = "left" }))
+hl.bind(mainMod .. " + SHIFT + L", hl.dsp.window.move({ direction = "right" }))
 
 -- Switch workspaces with mainMod + [0-9]
 -- Move active window to a workspace silently with mainMod + SHIFT + [0-9]

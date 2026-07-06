@@ -63,4 +63,34 @@ function y() {
 	command rm -f -- "$tmp"
 }
 
+function prox() {
+    case "$1" in
+        on)
+            export HTTP_PROXY="http://127.0.0.1:10809"
+            export HTTPS_PROXY="http://127.0.0.1:10809"
+            export http_proxy="$HTTP_PROXY"
+            export https_proxy="$HTTPS_PROXY"
+            echo "✅ Proxy enabled ($HTTP_PROXY)"
+            ;;
+        off)
+            unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy
+            echo "❌ Proxy disabled"
+            ;;
+        status)
+            if [ -n "$HTTP_PROXY" ]; then
+                echo "✅ Proxy is ON: $HTTP_PROXY"
+            else
+                echo "❌ Proxy is OFF"
+            fi
+            ;;
+        *)
+            echo "Usage: proxy {on|off|status}"
+            ;;
+    esac
+}
+
+function protonup() {
+    command /home/loruto/.venvs/protonup/bin/protonup "$@"
+}
+
 eval "$(zoxide init zsh)"
