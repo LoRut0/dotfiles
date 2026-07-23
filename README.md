@@ -28,4 +28,12 @@ reflector
 
 # conspectus
 obsidian
+
+# Monitoring state of PC
+htop
+btop
+nvtop
+
+# Tool for cleaning up file names
+detox
 ```

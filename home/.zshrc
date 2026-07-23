@@ -44,6 +44,9 @@ source $HOME/.zsh/zsh-vi-mode/zsh-vi-mode.plugin.zsh
 
 export PATH="$HOME/.local/bin:$PATH"
 
+alias ll="ls -lh"
+alias open="xdg-open"
+
 # proxy applies ONLY when launching claude or forge
 function claude() {
   HTTP_PROXY=http://127.0.0.1:10809 \
