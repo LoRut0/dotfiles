@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 # Open a new alacritty. If the currently focused window is already an
 # alacritty terminal, open the new one in that terminal's current directory.
+# Optional $1: ZDOTDIR to use for the new shell (e.g. the zsh-agent config).
 
 term="alacritty"
+
+if [ -n "$1" ]; then
+	export ZDOTDIR="$1"
+fi
 
 active=$(hyprctl activewindow -j 2>/dev/null)
 class=$(printf '%s' "$active" | jq -r '.class // empty')
