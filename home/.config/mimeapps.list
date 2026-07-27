@@ -1,0 +1,17 @@
+[Added Associations]
+application/pdf=xournalpp.desktop;
+application/vnd.openxmlformats-officedocument.wordprocessingml.document=libreoffice.desktop;
+video/mp4=/home/loruto/.local/share/applications/vlc-4.desktop;
+x-scheme-handler/mailto=userapp-Evolution-T4L8O3.desktop;
+
+[Default Applications]
+application/pdf=xournalpp.desktop;
+application/vnd.openxmlformats-officedocument.wordprocessingml.document=libreoffice.desktop;
+text/html=firefox.desktop
+video/mp4=/home/loruto/.local/share/applications/vlc-4.desktop;
+x-scheme-handler/about=firefox.desktop
+x-scheme-handler/claude-cli=claude-code-url-handler.desktop
+x-scheme-handler/http=firefox.desktop
+x-scheme-handler/https=firefox.desktop
+x-scheme-handler/mailto=userapp-Evolution-T4L8O3.desktop
+x-scheme-handler/unknown=firefox.desktop

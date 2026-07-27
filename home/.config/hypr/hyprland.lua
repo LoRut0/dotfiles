@@ -61,6 +61,7 @@ end)
 
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
+hl.env("XDG_CONFIG_DIRS", "/etc/xdg")
 
 -----------------------
 ---- LOOK AND FEEL ----
@@ -214,7 +215,10 @@ hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("firefox"))
 
 -- Core binds
 hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd("/home/loruto/.config/hypr/term-cwd.sh"))
-hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.exec_cmd("/home/loruto/.config/hypr/term-cwd.sh /home/loruto/.config/zsh-agent"))
+hl.bind(
+	mainMod .. " + SHIFT + Q",
+	hl.dsp.exec_cmd("/home/loruto/.config/hypr/term-cwd.sh /home/loruto/.config/zsh-agent")
+)
 hl.bind(mainMod .. " + C", hl.dsp.window.close())
 hl.bind(
 	mainMod .. " + M",
