@@ -2,3 +2,6 @@ home/.config/vifm/vifminfo.json
 home/.config/vifm/vifminfo.json_6685
 home/.config/nvim/lazy-lock.json
 home-macos/.config/karabiner/automatic_backups
+
+# generated zsh completions
+home/.zfunc/_arc
