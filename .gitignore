@@ -5,3 +5,4 @@ home-macos/.config/karabiner/automatic_backups
 
 # generated zsh completions
 home/.zfunc/_arc
+home/.zfunc/_rustup
