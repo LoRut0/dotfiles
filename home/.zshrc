@@ -1,14 +1,19 @@
 # ssh-agent eval for correct ssh work
-eval "$(ssh-agent -s)"
+# (macOS wires its own agent to Keychain, so the eval lives in linux.zsh)
 clear
 
-fpath+=~/.zfunc
-# PATH changing
-export PATH=$HOME/.cargo/bin:$PATH
-export EDITOR=nvim
+ZSH_PARTS="$HOME/.config/dotfiles/home/.config/zsh"
 
-# starting firefox in wayland mode
-export MOZ_ENABLE_WAYLAND=1
+# arc-zsh completions must land on fpath before compinit
+[[ -d $HOME/.zsh/arc-zsh ]] && fpath=($HOME/.zsh/arc-zsh $fpath)
+fpath+=~/.zfunc
+
+# Init completion system (must be after fpath)
+autoload -Uz compinit && compinit
+
+# PATH changing
+export EDITOR=nvim
+[[ -d $HOME/.cargo/bin ]] && export PATH="$HOME/.cargo/bin:$PATH"
 
 # Created by newuser for 5.9
 
@@ -28,6 +33,16 @@ autoload -U colors && colors
 autoload -Uz vcs_info
 precmd() { vcs_info }
 zstyle ':vcs_info:git:*' formats '%b'
+
+if [[ -d $HOME/.zsh/arc-zsh ]]; then
+    source $HOME/.zsh/arc-zsh/arc-zsh.plugin.zsh
+    zstyle ':vcs_info:*' enable git arc
+    zstyle ':vcs_info:arc:*' formats '%b'
+    zstyle ':vcs_info:arc:*' check-for-changes true
+else
+    zstyle ':vcs_info:*' enable git
+fi
+
 # Show cwd + current branch + prompt symbol
 setopt PROMPT_SUBST
 PROMPT='%F{green}%n%f %F{blue}%~%f%F{red}${vcs_info_msg_0_:+ (${vcs_info_msg_0_})}%f> '
@@ -44,19 +59,7 @@ source $HOME/.zsh/zsh-vi-mode/zsh-vi-mode.plugin.zsh
 export PATH="$HOME/.local/bin:$PATH"
 
 alias ll="ls -lh"
-alias open="xdg-open"
 
-# proxy applies ONLY when launching claude or forge
-function claude() {
-  HTTP_PROXY=http://127.0.0.1:10809 \
-  HTTPS_PROXY=http://127.0.0.1:10809 \
-  command claude "$@"
-}
-function forge() {
-  HTTP_PROXY=http://127.0.0.1:10809 \
-  HTTPS_PROXY=http://127.0.0.1:10809 \
-  command forge "$@"
-}
 function y() {
 	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
 	command yazi "$@" --cwd-file="$tmp"
@@ -65,34 +68,13 @@ function y() {
 	command rm -f -- "$tmp"
 }
 
-function prox() {
-    case "$1" in
-        on)
-            export HTTP_PROXY="http://127.0.0.1:10809"
-            export HTTPS_PROXY="http://127.0.0.1:10809"
-            export http_proxy="$HTTP_PROXY"
-            export https_proxy="$HTTPS_PROXY"
-            echo "✅ Proxy enabled ($HTTP_PROXY)"
-            ;;
-        off)
-            unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy
-            echo "❌ Proxy disabled"
-            ;;
-        status)
-            if [ -n "$HTTP_PROXY" ]; then
-                echo "✅ Proxy is ON: $HTTP_PROXY"
-            else
-                echo "❌ Proxy is OFF"
-            fi
-            ;;
-        *)
-            echo "Usage: proxy {on|off|status}"
-            ;;
-    esac
-}
+(( $+commands[zoxide] )) && eval "$(zoxide init zsh)"
 
-function protonup() {
-    command /home/loruto/.venvs/protonup/bin/protonup "$@"
-}
+# Platform-specific bits
+case "$OSTYPE" in
+    darwin*) [[ -r $ZSH_PARTS/macos.zsh ]] && source "$ZSH_PARTS/macos.zsh" ;;
+    linux*)  [[ -r $ZSH_PARTS/linux.zsh ]] && source "$ZSH_PARTS/linux.zsh" ;;
+esac
 
-eval "$(zoxide init zsh)"
+# Per-machine overrides (not tracked in git)
+[[ -r $HOME/.zshrc.local ]] && source "$HOME/.zshrc.local"
