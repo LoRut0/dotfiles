@@ -1,5 +1,17 @@
 # configs
 
+## Terminal on macOS
+
+New Terminal shells register an exit hook before attaching to tmux. When the
+outer shell exits (including after tmux detaches), a detached helper waits for
+its `login` process to end and requests a normal quit of that Terminal PID only
+if it has no remaining child processes. This also handles separate instances
+started by Karabiner with `open -n`; other windows with live sessions keep their
+instance running. Nested shells and tmux panes do not register the hook.
+
+The configuration takes effect in newly opened terminals; existing tmux clients
+started with `exec` need their Terminal instance closed manually once.
+
 ## packages
 
 ```bash

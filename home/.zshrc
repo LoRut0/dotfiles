@@ -2,6 +2,37 @@
 # (macOS wires its own agent to Keychain, so the eval lives in linux.zsh)
 clear
 
+# Register before tmux starts: pane shells belong to the tmux server, not Terminal.
+if [[ $OSTYPE == darwin* && -o interactive && -z $TMUX ]]; then
+    source "$HOME/.config/dotfiles/home/.config/zsh/terminal-exit.zsh"
+fi
+
+# Каждый терминал — отдельный клиент tmux: список окон общий, но текущее окно
+# у каждого своё. Держится на session groups: базовая сессия хранит окна, а
+# терминал получает собственную сессию-«вид» в той же группе.
+# Отключить: NO_TMUX=1. Сменить базу: TMUX_BASE_SESSION=имя.
+if [[ -o interactive && -z $TMUX && -t 1 && -z $NO_TMUX ]] && (( $+commands[tmux] )); then
+    () {
+        local base=${TMUX_BASE_SESSION:-main} stale
+        tmux has-session -t "=$base" 2>/dev/null || tmux new-session -d -s "$base" 2>/dev/null
+        tmux has-session -t "=$base" 2>/dev/null || return
+
+        # убрать «виды», осиротевшие от закрытых терминалов
+        for stale in ${(f)"$(tmux list-sessions -F '#{session_name}' \
+            -f "#{&&:#{m:$base-view-*,#{session_name}},#{==:#{session_attached},0}}" 2>/dev/null)"}; do
+            [[ -n $stale ]] && tmux kill-session -t "=$stale" 2>/dev/null
+        done
+
+        if (( ${+_dotfiles_terminal_pid} )); then
+            # Keep the outer shell so its exit hook runs after the client detaches.
+            tmux new-session -s "$base-view-$$" -t "$base"
+            exit $?
+        else
+            exec tmux new-session -s "$base-view-$$" -t "$base"
+        fi
+    }
+fi
+
 ZSH_PARTS="$HOME/.config/dotfiles/home/.config/zsh"
 
 # arc-zsh completions must land on fpath before compinit
