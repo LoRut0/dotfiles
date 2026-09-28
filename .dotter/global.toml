@@ -7,6 +7,22 @@ default_target_type = "symbolic"
 "home/.zfunc" = { target = "~/.zfunc", type = "symbolic", recurse = false }
 "home/.config/zsh" = { target = "~/.config/zsh", type = "symbolic", recurse = false }
 
+[zsh_plugins.files]
+"home/.config/zsh-plugins" = { target = "~/.config/zsh-plugins", type = "symbolic", recurse = false }
+
+[vm_no_tmux.files]
+".dotter/markers/linux-vm" = "~/.dotter-linux-vm"
+
+[arc_autostart.files]
+"home/.local/bin/arc-autostart" = "~/.local/bin/arc-autostart"
+
+[arc_autostart_macos.files]
+"home-macos/.local/bin/arc-autostart-login" = "~/.local/bin/arc-autostart-login"
+"home-macos/Library/LaunchAgents/com.lorut0.arc-autostart.plist" = "~/Library/LaunchAgents/com.lorut0.arc-autostart.plist"
+
+[arc_autostart_linux_vm.files]
+"home-linux/.config/systemd/user/arc-autostart@.service" = "~/.config/systemd/user/arc-autostart@.service"
+
 [zsh_agent.files]
 "home/.config/zsh-agent" = { target = "~/.config/zsh-agent", type = "symbolic", recurse = false }
 

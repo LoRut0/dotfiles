@@ -22,7 +22,7 @@
 
 _dotfiles_terminal_exit() {
     /usr/bin/nohup /bin/zsh -f \
-        "$HOME/.config/dotfiles/home/.config/zsh/terminal-exit-cleanup.zsh" \
+        "$HOME/.config/zsh/terminal-exit-cleanup.zsh" \
         "$_dotfiles_terminal_pid" "$_dotfiles_terminal_started" \
         "$_dotfiles_terminal_login" </dev/null >/dev/null 2>&1 &!
 }

@@ -1,5 +1,8 @@
 packages = [
   "zsh",
+  "zsh_plugins",
+  "arc_autostart",
+  "arc_autostart_macos",
   "zsh_agent",
   "nvim",
   "fish",

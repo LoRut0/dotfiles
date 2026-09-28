@@ -4,14 +4,15 @@ clear
 
 # Register before tmux starts: pane shells belong to the tmux server, not Terminal.
 if [[ $OSTYPE == darwin* && -o interactive && -z $TMUX ]]; then
-    source "$HOME/.config/dotfiles/home/.config/zsh/terminal-exit.zsh"
+    source "$HOME/.config/zsh/terminal-exit.zsh"
 fi
 
 # Каждый терминал — отдельный клиент tmux: список окон общий, но текущее окно
 # у каждого своё. Держится на session groups: базовая сессия хранит окна, а
 # терминал получает собственную сессию-«вид» в той же группе.
-# Отключить: NO_TMUX=1. Сменить базу: TMUX_BASE_SESSION=имя.
-if [[ -o interactive && -z $TMUX && -t 1 && -z $NO_TMUX ]] && (( $+commands[tmux] )); then
+# Отключить: NO_TMUX=1. На linux-vm это делает маркер профиля Dotter.
+# Сменить базу: TMUX_BASE_SESSION=имя.
+if [[ -o interactive && -z $TMUX && -t 1 && -z $NO_TMUX && ! -e "$HOME/.dotter-linux-vm" && "$TERM_PROGRAM" != "vscode" ]] && (( $+commands[tmux] )); then
     () {
         local base=${TMUX_BASE_SESSION:-main} stale
         tmux has-session -t "=$base" 2>/dev/null || tmux new-session -d -s "$base" 2>/dev/null
@@ -33,7 +34,7 @@ if [[ -o interactive && -z $TMUX && -t 1 && -z $NO_TMUX ]] && (( $+commands[tmux
     }
 fi
 
-ZSH_PARTS="$HOME/.config/dotfiles/home/.config/zsh"
+ZSH_PARTS="$HOME/.config/zsh"
 
 # arc-zsh completions must land on fpath before compinit
 [[ -d $HOME/.zsh/arc-zsh ]] && fpath=($HOME/.zsh/arc-zsh $fpath)
@@ -82,10 +83,12 @@ PROMPT='%F{green}%n%f %F{blue}%~%f%F{red}${vcs_info_msg_0_:+ (${vcs_info_msg_0_}
 autoload -Uz vigo
 
 # Completion sys
-source $HOME/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
-source $HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-# zsh-vi-mode
-source $HOME/.zsh/zsh-vi-mode/zsh-vi-mode.plugin.zsh
+ZSH_PLUGINS_DIR="$HOME/.config/zsh-plugins"
+[[ -d $ZSH_PLUGINS_DIR ]] || ZSH_PLUGINS_DIR="$HOME/.zsh"
+[[ -r $ZSH_PLUGINS_DIR/zsh-autosuggestions/zsh-autosuggestions.zsh ]] &&
+    source "$ZSH_PLUGINS_DIR/zsh-autosuggestions/zsh-autosuggestions.zsh"
+[[ -r $ZSH_PLUGINS_DIR/zsh-vi-mode/zsh-vi-mode.plugin.zsh ]] &&
+    source "$ZSH_PLUGINS_DIR/zsh-vi-mode/zsh-vi-mode.plugin.zsh"
 
 export PATH="$HOME/.local/bin:$PATH"
 
@@ -109,3 +112,7 @@ esac
 
 # Per-machine overrides (not tracked in git)
 [[ -r $HOME/.zshrc.local ]] && source "$HOME/.zshrc.local"
+
+# Must run after all other code that may register ZLE widgets.
+[[ -r $ZSH_PLUGINS_DIR/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] &&
+    source "$ZSH_PLUGINS_DIR/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"

@@ -1,0 +1,11 @@
+[Unit]
+Description=Restore Arcadia worktree %i
+
+[Service]
+Type=forking
+RemainAfterExit=yes
+TimeoutStartSec=11min
+ExecStart=%h/.local/bin/arc-autostart linux-vm --slot %i
+
+[Install]
+WantedBy=default.target

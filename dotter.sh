@@ -46,9 +46,12 @@ case "$profile/$platform" in
         ;;
 esac
 
-dotter_options=()
+dotter_options=(
+    --global-config .dotter/global.toml
+    --local-config ".dotter/profiles/$profile.toml"
+)
 if [[ "$profile" == ai ]]; then
-    dotter_options=(--cache-file .dotter/cache-ai.toml --cache-directory .dotter/cache-ai)
+    dotter_options+=(--cache-file .dotter/cache-ai.toml --cache-directory .dotter/cache-ai)
 fi
 
 dotter_bin_dir="$dotfiles_dir/.dotter/bin"
@@ -80,8 +83,7 @@ if [[ ! -x "$dotter_bin" ]]; then
 fi
 
 cd "$dotfiles_dir"
+export DOTFILES_PROFILE="$profile"
 exec "$dotter_bin" \
-    --global-config .dotter/global.toml \
-    --local-config ".dotter/profiles/$profile.toml" \
     "${dotter_options[@]}" \
     "$@"

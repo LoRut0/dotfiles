@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+
+umask 077
+mkdir -p "$HOME/.local/state"
+touch "$HOME/.local/state/arc-autostart.log"
+chmod 600 "$HOME/.local/state/arc-autostart.log"
+exec "$HOME/.local/bin/arc-autostart" mac >> "$HOME/.local/state/arc-autostart.log" 2>&1

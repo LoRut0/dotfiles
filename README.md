@@ -8,9 +8,9 @@ versioned profiles in `.dotter/profiles/`:
 
 | Profile | Purpose |
 | --- | --- |
-| `mac` | macOS workstation, including Karabiner and macOS tmux |
+| `mac` | macOS workstation, including Karabiner, tmux and Arc mounts |
 | `linux-desktop` | Full Linux desktop with Sway, Hyprland and bars |
-| `linux-vm` | Minimal Linux VM with Zsh and Neovim |
+| `linux-vm` | Linux VM with Zsh, Neovim and Arc worktrees; no automatic tmux startup |
 | `ai` | Claude and Codex configuration on macOS or Linux |
 
 From the repository root, review a profile before deploying it:
@@ -40,11 +40,53 @@ from its old shared cache; then deploy `ai` to put them under its own cache.
 Subsequent deployments of either profile leave the other's links alone. The
 Claude package currently links `~/.config/claude`, and Codex links files into
 `~/.codex/skills`.
+If the AI dry run reports existing regular files at those targets, reconcile
+them before deploying; Dotter does not replace them without `--force`.
 
-The old `install_cfg.sh` remains available for existing installations. It
-does not use the Dotter profiles. Do not run both installers for the same
-destination during migration; first inspect Dotter's dry run and the existing
-links. The systemd timer in `sysd/` is a separate privileged installation.
+Before migrating an existing installation, inspect Dotter's dry run and the
+existing links. The systemd timer in `sysd/` is a separate privileged
+installation.
+
+The machine profiles also deploy the vendored Zsh plugins from
+`home/.config/zsh-plugins/`. Their pinned upstream revisions and licenses are
+recorded there. Until that link is deployed, `.zshrc` can use the previous
+`~/.zsh` copies. Syntax highlighting loads last, after other Zsh widgets and
+local overrides.
+
+## Arc mounts at startup
+
+The `mac` profile includes a LaunchAgent that restores `~/arcadia` and
+`~/arcadia-wt/{first,second,third,fourth}` at login. The
+`linux-vm` profile includes a user systemd service template for the four
+worktrees, without the primary `~/arcadia` mount. The shared helper reads
+`arc mount --list --json` and skips mounted paths. On first use, it creates
+missing worktree slots as new branches from `trunk` with a shared object store
+and no lifecycle hooks. Later starts remount the registered worktrees. It
+retries failures for up to ten minutes and refuses to overwrite a non-empty
+or symbolic mount path. The primary macOS `~/arcadia` must already be
+registered.
+
+Each machine needs `arc`, `ya`, Python 3.7+, valid Arc credentials, and network
+access for the first mount.
+
+Deploying `mac` also loads the LaunchAgent. To rerun an already loaded agent:
+
+```sh
+launchctl kickstart "gui/$(id -u)/com.lorut0.arc-autostart"
+```
+
+Deploying `linux-vm` enables all four user service instances. To start the
+user manager at boot, before the first login, enable lingering once on the VM:
+
+```sh
+sudo loginctl enable-linger "$USER"
+```
+
+On macOS, see `~/.local/state/arc-autostart.log`; on Linux, use
+`journalctl --user -u arc-autostart@first.service` (or another slot). To retry
+a failed mount without rebooting, run `~/.local/bin/arc-autostart mac` on macOS
+or `~/.local/bin/arc-autostart linux-vm --slot first` on the VM, replacing
+`first` with the affected slot name.
 
 ## Terminal on macOS
 
