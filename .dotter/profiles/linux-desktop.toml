@@ -1,0 +1,18 @@
+packages = [
+  "zsh",
+  "zsh_agent",
+  "nvim",
+  "fish",
+  "yazi",
+  "alacritty",
+  "kitty",
+  "vifm",
+  "vlc",
+  "tmux_linux",
+  "sway",
+  "hypr",
+  "waybar",
+  "ashell",
+  "mimeapps",
+  "menus",
+]

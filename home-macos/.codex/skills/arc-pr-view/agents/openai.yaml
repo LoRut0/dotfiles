@@ -1,0 +1,4 @@
+interface:
+  display_name: "Arc PR View"
+  short_description: "View a whole Arc PR as local editor changes"
+  default_prompt: "Use $arc-pr-view to expose this PR as local unstaged changes for IDE review."

@@ -1,0 +1,13 @@
+packages = [
+  "zsh",
+  "zsh_agent",
+  "nvim",
+  "fish",
+  "yazi",
+  "alacritty",
+  "kitty",
+  "vifm",
+  "vlc",
+  "tmux_macos",
+  "karabiner",
+]

@@ -6,3 +6,11 @@ home-macos/.config/karabiner/automatic_backups
 # generated zsh completions
 home/.zfunc/_arc
 home/.zfunc/_rustup
+
+# Dotter's machine-local state and downloaded executables
+.dotter/cache.toml
+.dotter/cache/
+.dotter/cache-ai.toml
+.dotter/cache-ai/
+.dotter/bin/
+.dotter/local.toml

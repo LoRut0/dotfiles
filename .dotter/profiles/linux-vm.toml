@@ -1,0 +1,2 @@
+# Minimal VM profile. Add packages here only when the VM needs them.
+packages = ["zsh", "nvim"]
