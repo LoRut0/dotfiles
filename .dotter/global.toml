@@ -56,8 +56,16 @@ default_target_type = "symbolic"
 [karabiner.files]
 "home-macos/.config/karabiner" = { target = "~/.config/karabiner", type = "symbolic", recurse = false }
 
-[codex.files]
-"home-macos/.codex/skills" = { target = "~/.codex/skills", type = "symbolic", recurse = true }
+[codex_instructions.files]
+"home/.codex/AGENTS.md" = "~/.codex/AGENTS.md"
+
+[agent_skills.files]
+"home/.agents/skills/arc-pr-view" = { target = "~/.agents/skills/arc-pr-view", type = "symbolic", recurse = false }
+"home/.agents/skills/vm-cleanup" = { target = "~/.agents/skills/vm-cleanup", type = "symbolic", recurse = false }
+
+[claude_skills.files]
+"home/.claude/skills/arc-pr-view" = { target = "~/.claude/skills/arc-pr-view", type = "symbolic", recurse = false }
+"home/.claude/skills/vm-cleanup" = { target = "~/.claude/skills/vm-cleanup", type = "symbolic", recurse = false }
 
 [tmux_linux.files]
 "home-linux/.config/tmux" = { target = "~/.config/tmux", type = "symbolic", recurse = false }

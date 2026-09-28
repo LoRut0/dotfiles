@@ -1,1 +1,1 @@
-packages = ["claude", "codex"]
+packages = ["claude", "codex_instructions", "agent_skills", "claude_skills"]
