@@ -13,6 +13,9 @@ default_target_type = "symbolic"
 [vm_no_tmux.files]
 ".dotter/markers/linux-vm" = "~/.dotter-linux-vm"
 
+[vm_zsh_fallback.files]
+"home-linux/.config/bash/zsh-default.bash" = "~/.config/bash/zsh-default.bash"
+
 [arc_autostart.files]
 "home/.local/bin/arc-autostart" = "~/.local/bin/arc-autostart"
 

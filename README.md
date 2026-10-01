@@ -10,7 +10,7 @@ versioned profiles in `.dotter/profiles/`:
 | --- | --- |
 | `mac` | macOS workstation, including Karabiner, tmux and Arc mounts |
 | `linux-desktop` | Full Linux desktop with Sway, Hyprland and bars |
-| `linux-vm` | Linux VM with Zsh, Neovim and Arc worktrees; no automatic tmux startup |
+| `linux-vm` | Linux VM with Zsh as the login shell, Neovim and Arc worktrees; no automatic tmux startup |
 | `ai` | Claude and Codex configuration on macOS or Linux |
 
 From the repository root, review a profile before deploying it:
@@ -19,6 +19,14 @@ From the repository root, review a profile before deploying it:
 bash dotter.sh linux-vm --dry-run deploy
 bash dotter.sh linux-vm deploy
 ```
+
+Deploying `linux-vm` also changes the current user's login shell to Zsh with
+`chsh` when needed. The new shell is used from the next login, and the VM
+profile marker keeps `.zshrc` from starting tmux automatically. When `chsh`
+cannot update the account (for example, on an immutable VM image), the
+deployment adds a small startup fallback to the existing Bash profile files
+instead; interactive Bash is then replaced by a Zsh login shell while
+non-interactive scripts stay in Bash.
 
 Replace `linux-vm` with the desired profile. The wrapper downloads a pinned
 Dotter v0.13.5 executable for macOS ARM64 or Linux x86_64/ARM64 on first use,
