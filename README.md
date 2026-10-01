@@ -39,9 +39,10 @@ installation, deploy the machine profile first so Dotter removes the AI links
 from its old shared cache; then deploy `ai` to put them under its own cache.
 Subsequent deployments of either profile leave the other's links alone. The
 Claude package links `~/.config/claude`. The profile also links the global
-`~/.codex/AGENTS.md` and the shared `arc-pr-view` and `vm-cleanup` skills into
-`~/.agents/skills`. Claude Code receives the same skills through links in
-`~/.claude/skills`.
+`~/.codex/AGENTS.md` and the shared `arc-pr-view`, `vm-cleanup`, and `dotfiles`
+skills into `~/.agents/skills`. Claude Code receives the same skills through
+links in `~/.claude/skills`. The `dotfiles` skill describes how to update this
+repository through Dotter and commit and push completed changes to GitHub.
 If the AI dry run reports existing regular files at those targets, reconcile
 them before deploying; Dotter does not replace them without `--force`.
 
