@@ -9,7 +9,7 @@ fi
 
 # Каждый терминал — отдельный клиент tmux: список окон общий, но текущее окно
 # у каждого своё. Держится на session groups: базовая сессия хранит окна, а
-# терминал получает собственную сессию-«вид» в той же группе.
+# терминал получает собственную сессию-«вид» в той же группе и новое окно.
 # Отключить: NO_TMUX=1. На VM это делает маркер профиля Dotter
 # или systemd-detect-virt, если профиль ещё не успел развернуться.
 # Сменить базу: TMUX_BASE_SESSION=имя.
@@ -20,8 +20,10 @@ if [[ -e "$HOME/.dotter-linux-vm" ]] ||
 fi
 if [[ -o interactive && -z $TMUX && -t 1 && -z $NO_TMUX && -z $_dotfiles_vm_without_tmux && "$TERM_PROGRAM" != "vscode" ]] && (( $+commands[tmux] )); then
     () {
-        local base=${TMUX_BASE_SESSION:-main} stale
-        tmux has-session -t "=$base" 2>/dev/null || tmux new-session -d -s "$base" 2>/dev/null
+        local base=${TMUX_BASE_SESSION:-main} stale view base_created=0
+        if ! tmux has-session -t "=$base" 2>/dev/null; then
+            tmux new-session -d -s "$base" 2>/dev/null && base_created=1
+        fi
         tmux has-session -t "=$base" 2>/dev/null || return
 
         # убрать «виды», осиротевшие от закрытых терминалов
@@ -30,12 +32,21 @@ if [[ -o interactive && -z $TMUX && -t 1 && -z $NO_TMUX && -z $_dotfiles_vm_with
             [[ -n $stale ]] && tmux kill-session -t "=$stale" 2>/dev/null
         done
 
+        view="$base-view-$$"
+        tmux new-session -d -s "$view" -t "$base" 2>/dev/null || return
+        if (( ! base_created )); then
+            tmux new-window -t "=$view:" 2>/dev/null || {
+                tmux kill-session -t "=$view" 2>/dev/null
+                return
+            }
+        fi
+
         if (( ${+_dotfiles_terminal_pid} )); then
             # Keep the outer shell so its exit hook runs after the client detaches.
-            tmux new-session -s "$base-view-$$" -t "$base"
+            tmux attach-session -t "=$view"
             exit $?
         else
-            exec tmux new-session -s "$base-view-$$" -t "$base"
+            exec tmux attach-session -t "=$view"
         fi
     }
 fi

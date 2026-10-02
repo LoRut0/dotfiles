@@ -24,3 +24,11 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.bo[args.buf].errorformat = "%f:%l:%*[^:]:%m"
   end,
 })
+
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "markdown",
+  callback = function(args)
+    vim.opt_local.spell = false
+    vim.diagnostic.enable(false, { bufnr = args.buf })
+  end,
+})
