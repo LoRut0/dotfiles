@@ -3,6 +3,10 @@
 -- Add any additional options here
 vim.g.mapleader = "\\"
 vim.g.maplocalleader = "\\"
+-- Prefer the Arc checkout root to LSP roots and ancestor .git directories.
+local root_spec = vim.g.root_spec
+table.insert(root_spec, 1, require("config.arcadia").root)
+vim.g.root_spec = root_spec
 -- disabling inline hints
 vim.lsp.inlay_hint.enable(false)
 
