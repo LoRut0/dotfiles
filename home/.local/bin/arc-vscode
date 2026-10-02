@@ -155,7 +155,10 @@ def create_workspace(args):
         raise ValueError("The same folder was supplied more than once")
     name = "arcadia-" + root.name if root.parent.name == "arcadia-wt" else root.name
     data_home = Path(os.environ.get("XDG_DATA_HOME", str(Path.home() / ".local/share")))
-    workspace = Path(args.output).expanduser().absolute() if args.output else data_home / "arc-vscode" / (name + ".code-workspace")
+    workspace_dir = Path("/codenv/workspace")
+    if not workspace_dir.is_dir():
+        workspace_dir = data_home / "arc-vscode"
+    workspace = Path(args.output).expanduser().absolute() if args.output else workspace_dir / (name + ".code-workspace")
     if workspace.exists():
         raise ValueError("Workspace already exists; use Add Folder to Workspace: {}".format(workspace))
     clangd = args.clangd or subprocess.check_output(

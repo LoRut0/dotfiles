@@ -115,10 +115,13 @@ arc-vscode init ~/arcadia-wt/first \
   taxi/uservices/services/grocery-api
 ```
 
-Open `~/.local/share/arc-vscode/arcadia-first.code-workspace` with **File → Open
+Open `/codenv/workspace/arcadia-first.code-workspace` with **File → Open
 Workspace from File** in the VS Code window connected to the VM. For the main
 checkout, `arc-vscode init ~/arcadia ...` creates `arcadia.code-workspace`.
-An existing workspace is never overwritten.
+An existing workspace is never overwritten. New workspaces default to
+`/codenv/workspace` when that directory exists, otherwise
+`$XDG_DATA_HOME/arc-vscode` (normally `~/.local/share/arc-vscode`). Use `--output`
+to choose a different location.
 
 To work in another service in that checkout:
 
@@ -141,7 +144,7 @@ The same generation is available from a terminal, including for Neovim:
 
 ```sh
 arc-vscode prepare ~/arcadia-wt/first/taxi/uservices/services/grocery-goals \
-  --workspace ~/.local/share/arc-vscode/arcadia-first.code-workspace
+  --workspace /codenv/workspace/arcadia-first.code-workspace
 # Inspect commands without running a build:
 arc-vscode prepare . --dry-run
 ```
