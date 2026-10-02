@@ -5,9 +5,9 @@ dotfiles_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 profile="${1:-}"
 
 case "$profile" in
-    mac|linux-desktop|linux-vm|ai) shift ;;
+    mac|linux-desktop|linux-vm|ai|vscode-arc) shift ;;
     *)
-        echo "Usage: $0 {mac|linux-desktop|linux-vm|ai} [Dotter options] deploy" >&2
+        echo "Usage: $0 {mac|linux-desktop|linux-vm|ai|vscode-arc} [Dotter options] deploy" >&2
         exit 2
         ;;
 esac
@@ -39,7 +39,7 @@ case "$platform/$architecture" in
 esac
 
 case "$profile/$platform" in
-    mac/Darwin|linux-desktop/Linux|linux-vm/Linux|ai/Darwin|ai/Linux) ;;
+    mac/Darwin|linux-desktop/Linux|linux-vm/Linux|ai/Darwin|ai/Linux|vscode-arc/Darwin|vscode-arc/Linux) ;;
     *)
         echo "Profile $profile is not for $platform" >&2
         exit 2
@@ -50,8 +50,8 @@ dotter_options=(
     --global-config .dotter/global.toml
     --local-config ".dotter/profiles/$profile.toml"
 )
-if [[ "$profile" == ai ]]; then
-    dotter_options+=(--cache-file .dotter/cache-ai.toml --cache-directory .dotter/cache-ai)
+if [[ "$profile" == ai || "$profile" == vscode-arc ]]; then
+    dotter_options+=(--cache-file ".dotter/cache-$profile.toml" --cache-directory ".dotter/cache-$profile")
 fi
 
 dotter_bin_dir="$dotfiles_dir/.dotter/bin"

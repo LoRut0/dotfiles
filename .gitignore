@@ -12,5 +12,7 @@ home/.zfunc/_rustup
 .dotter/cache/
 .dotter/cache-ai.toml
 .dotter/cache-ai/
+.dotter/cache-vscode-arc.toml
+.dotter/cache-vscode-arc/
 .dotter/bin/
 .dotter/local.toml

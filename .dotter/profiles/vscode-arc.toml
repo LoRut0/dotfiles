@@ -1,0 +1,2 @@
+# Optional VS Code integration for Arc checkouts, deployed separately.
+packages = ["arc_vscode"]

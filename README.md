@@ -12,6 +12,7 @@ versioned profiles in `.dotter/profiles/`:
 | `linux-desktop` | Full Linux desktop with Sway, Hyprland and bars |
 | `linux-vm` | Linux VM with Zsh as the login shell, Neovim and Arc worktrees; no automatic tmux startup |
 | `ai` | Claude and Codex configuration on macOS or Linux |
+| `vscode-arc` | Optional VS Code workspace helper for Arc checkouts on macOS or Linux |
 
 From the repository root, review a profile before deploying it:
 
@@ -101,8 +102,20 @@ or `~/.local/bin/arc-autostart linux-vm --slot first` on the VM, replacing
 
 ## VS Code in Arcadia
 
-The `linux-vm` profile installs `~/.local/bin/arc-vscode`. It creates a persistent
-multi-root workspace for each Arc checkout. Only add the services and libraries
+The separate `vscode-arc` profile installs `~/.local/bin/arc-vscode`:
+
+```sh
+bash dotter.sh vscode-arc --dry-run deploy
+bash dotter.sh vscode-arc deploy
+```
+
+It has its own Dotter cache, so it can be deployed alongside any machine profile
+and `ai`. When migrating an installation previously managed by `linux-vm`, deploy
+`linux-vm` first to release the helper from its old cache, then deploy `vscode-arc`.
+Subsequent deployments manage their links independently.
+
+The helper creates a persistent multi-root workspace for each Arc checkout.
+Only add the services and libraries
 you need; the checkout root is used for Arc integration, not as an Explorer or
 search folder. The workspace uses `ya tool clangd`, disables competing C/C++
 IntelliSense, and enables file watching for the selected folders.
