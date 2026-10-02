@@ -99,6 +99,78 @@ a failed mount without rebooting, run `~/.local/bin/arc-autostart mac` on macOS
 or `~/.local/bin/arc-autostart linux-vm --slot first` on the VM, replacing
 `first` with the affected slot name.
 
+## VS Code in Arcadia
+
+The `linux-vm` profile installs `~/.local/bin/arc-vscode`. It creates a persistent
+multi-root workspace for each Arc checkout. Only add the services and libraries
+you need; the checkout root is used for Arc integration, not as an Explorer or
+search folder. The workspace uses `ya tool clangd`, disables competing C/C++
+IntelliSense, and enables file watching for the selected folders.
+
+Create a workspace once (folder paths are relative to the checkout):
+
+```sh
+arc-vscode init ~/arcadia-wt/first \
+  taxi/uservices/services/grocery-goals \
+  taxi/uservices/services/grocery-api
+```
+
+Open `~/.local/share/arc-vscode/arcadia-first.code-workspace` with **File → Open
+Workspace from File** in the VS Code window connected to the VM. For the main
+checkout, `arc-vscode init ~/arcadia ...` creates `arcadia.code-workspace`.
+An existing workspace is never overwritten.
+
+To work in another service in that checkout:
+
+1. Use **File → Add Folder to Workspace**, selecting that service's directory
+   containing `ya.make`. Save the workspace if VS Code prompts.
+2. Open a source file in the folder and press **Ctrl+Shift+B**. The default task,
+   **Arcadia: Generate compilation database (current folder)**, builds generated
+   headers and sources, writes `compile_commands.json` in that folder, and
+   refreshes the database used by VS Code. Run it again after changes to build
+   definitions or generated-code inputs.
+3. If necessary, run **clangd: Restart language server** from the Command Palette.
+
+With no file open, use **Tasks: Run Task → Arcadia: Generate compilation database
+(choose folder)** and enter the folder path relative to the checkout. After
+removing folders, or adding a folder with an already working database, run
+**Arcadia: Refresh workspace databases**. Only folders belonging to that checkout
+are accepted. These C++ tasks do not configure Python analysis or debugger launches.
+
+The same generation is available from a terminal, including for Neovim:
+
+```sh
+arc-vscode prepare ~/arcadia-wt/first/taxi/uservices/services/grocery-goals \
+  --workspace ~/.local/share/arc-vscode/arcadia-first.code-workspace
+# Inspect commands without running a build:
+arc-vscode prepare . --dry-run
+```
+
+`--workspace` is optional when only the local database is needed. Use `--jobs N`
+to change the default limit of six workers, or repeat `--ya-arg=-DNAME=value` to
+pass build flags to both `ya make` and `ya dump compile-commands`.
+
+Generated headers and sources live under
+`~/.cache/arc-vscode/<checkout>-<hash>/targets/<service-path>/build`. Both `ya`
+commands use that same build root, and the database retains the compiler's
+absolute path. There are no generated-source links in the checkout. A valid new
+database replaces the old one atomically; the previous copy is saved beside the
+build directory as `previous_compile_commands.json`.
+
+VS Code reads a combined database in that checkout's cache, built from the
+selected folders' databases. This includes their transitive dependencies, so
+navigation into shared libraries retains compiler flags. Each service's own
+database takes precedence for its files; duplicate dependency entries use the
+last prepared service, or the newest service database on a manual refresh.
+Clangd indexes these dependencies too; selecting folders limits Explorer/search
+and file watching, but indexing cost still depends on the selected targets.
+New folders need generation first. Existing databases are reused as-is; regenerate
+older databases if they point at missing generated headers (for example `.gen`).
+
+Workspaces, build outputs, and compilation databases are machine-local; dotfiles
+stores the helper and its tests. Run the tests with
+`python3 -B -m unittest discover -s tests -v`.
+
 ## Terminal on macOS
 
 New Terminal shells register an exit hook before attaching to tmux. When the

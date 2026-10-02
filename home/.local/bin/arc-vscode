@@ -1,0 +1,320 @@
+#!/usr/bin/env python3
+"""Persistent VS Code workspaces and compilation databases for Arc checkouts."""
+
+import argparse
+import contextlib
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import shlex
+import shutil
+import subprocess
+import sys
+import tempfile
+
+
+RESULT_EXTENSIONS = (".h", ".hh", ".hpp", ".inc", ".ipp", ".inl", ".c", ".cc", ".cpp", ".C", ".cxx")
+DEFAULT_JOBS = max(1, min(6, (os.cpu_count() or 2) // 2))
+
+
+def checkout_for(path):
+    path = Path(path).expanduser().resolve()
+    for parent in (path, *path.parents):
+        if (parent / ".arc/HEAD").is_file() and (parent / "ya").is_file():
+            return parent
+    raise ValueError("Not inside a mounted Arc checkout: {}".format(path))
+
+
+def contains(parent, child):
+    return child == parent or parent in child.parents
+
+
+def folder_in_checkout(value, checkout, relative_to=None):
+    path = Path(value).expanduser()
+    if not path.is_absolute():
+        path = (relative_to or checkout) / path
+    path = path.resolve()
+    if not path.is_dir() or not contains(checkout, path) or checkout_for(path) != checkout:
+        raise ValueError("Folder must belong to {}: {}".format(checkout, path))
+    if path == checkout:
+        raise ValueError("Select a service or library folder, rather than the whole checkout")
+    return path
+
+
+def checkout_cache(checkout):
+    base = Path(os.environ.get("XDG_CACHE_HOME", str(Path.home() / ".cache")))
+    digest = hashlib.sha256(str(checkout).encode()).hexdigest()[:12]
+    return base / "arc-vscode" / (checkout.name + "-" + digest)
+
+
+def read_jsonc(path):
+    # Preserve quoted strings (including URLs), then remove comments/trailing commas.
+    text = Path(path).read_text()
+    string = r'("(?:\\.|[^"\\])*")'
+    text = re.sub(string + r'|/\*[\s\S]*?\*/|//[^\r\n]*', lambda m: m[1] or "", text)
+    text = re.sub(string + r'|,\s*([}\]])', lambda m: m[1] or m[2], text)
+    return json.loads(text)
+
+
+def atomic_json(path, data):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, name = tempfile.mkstemp(prefix="." + path.name + ".", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w") as stream:
+            json.dump(data, stream, indent=2)
+            stream.write("\n")
+        os.chmod(name, 0o644)
+        os.replace(name, path)
+    finally:
+        if os.path.exists(name):
+            os.unlink(name)
+
+
+@contextlib.contextmanager
+def locked(path):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a") as stream:
+        try:
+            fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise ValueError("Another task is updating this database; wait for it to finish")
+        yield
+
+
+def workspace_folders(workspace):
+    config = read_jsonc(workspace)
+    root = checkout_for(config["settings"]["yandex.arcRoot"])
+    folders = []
+    for item in config.get("folders", []):
+        folder = folder_in_checkout(item["path"], root, workspace.parent)
+        if folder not in folders:
+            folders.append(folder)
+    return root, folders
+
+
+def read_database(path):
+    with path.open() as stream:
+        database = json.load(stream)
+    if not isinstance(database, list) or not database:
+        raise ValueError("Compilation database is empty or invalid: {}".format(path))
+    for item in database:
+        if not isinstance(item, dict) or not all(k in item for k in ("file", "directory")):
+            raise ValueError("Invalid compilation database entry in {}".format(path))
+        if not item.get("command") and not item.get("arguments"):
+            raise ValueError("Missing compiler command in {}".format(path))
+        if not Path(item["directory"]).is_absolute():
+            raise ValueError("Compiler working directory must be absolute: {}".format(path))
+    return database
+
+
+def refresh(workspace, preferred=None):
+    root, folders = workspace_folders(workspace)
+    cache = checkout_cache(root)
+    with locked(cache / "refresh.lock"):
+        entries, scores = {}, {}
+        for order, folder in enumerate(folders):
+            path = folder / "compile_commands.json"
+            if not path.exists():
+                print("Generate a compilation database when needed: {}".format(folder))
+                continue
+            modified = path.stat().st_mtime_ns
+            for item in read_database(path):
+                file = Path(os.path.normpath(os.path.join(item["directory"], item["file"])))
+                own_file = contains(folder, file)
+                # Prefer a service's own flags; shared dependencies use the newest database.
+                score = (own_file, len(folder.parts) if own_file else 0, folder == preferred, modified, order)
+                key = str(file)
+                if key not in entries or score > scores[key]:
+                    entries[key], scores[key] = item, score
+        output = cache / "compdb/compile_commands.json"
+        atomic_json(output, list(entries.values()))
+    print("VS Code database: {} ({} files)".format(output, len(entries)))
+    return output
+
+
+def process_task(label, args, cwd):
+    return {
+        "label": label,
+        "type": "process",
+        "command": "${userHome}/.local/bin/arc-vscode",
+        "args": args,
+        "options": {"cwd": str(cwd)},
+        "problemMatcher": [],
+        "presentation": {"reveal": "always", "panel": "dedicated", "clear": True},
+        "runOptions": {"instanceLimit": 1},
+    }
+
+
+def create_workspace(args):
+    root = checkout_for(args.checkout)
+    folders = [folder_in_checkout(value, root) for value in args.folders]
+    if len(set(folders)) != len(folders):
+        raise ValueError("The same folder was supplied more than once")
+    name = "arcadia-" + root.name if root.parent.name == "arcadia-wt" else root.name
+    data_home = Path(os.environ.get("XDG_DATA_HOME", str(Path.home() / ".local/share")))
+    workspace = Path(args.output).expanduser().absolute() if args.output else data_home / "arc-vscode" / (name + ".code-workspace")
+    if workspace.exists():
+        raise ValueError("Workspace already exists; use Add Folder to Workspace: {}".format(workspace))
+    clangd = args.clangd or subprocess.check_output(
+        [str(root / "ya"), "tool", "clangd", "--print-path"], cwd=root, text=True
+    ).strip()
+    if not Path(clangd).is_file() or not os.access(clangd, os.X_OK):
+        raise ValueError("clangd is not executable: {}".format(clangd))
+    subprocess.run([clangd, "--version"], check=True, stdout=subprocess.DEVNULL)
+    common = ["--workspace", str(workspace)]
+    current = process_task(
+        "Arcadia: Generate compilation database (current folder)",
+        ["prepare", "${fileWorkspaceFolder}"] + common,
+        root,
+    )
+    current["group"] = {"kind": "build", "isDefault": True}
+    config = {
+        "folders": [{"name": p.name, "path": str(p)} for p in folders],
+        "settings": {
+            "yandex.arcRoot": str(root),
+            "clangd.path": clangd,
+            "clangd.arguments": [
+                "--enable-config",
+                "--compile-commands-dir=" + str(checkout_cache(root) / "compdb"),
+                "--background-index",
+                "--header-insertion=never",
+                "--log=info",
+                "-j=" + str(DEFAULT_JOBS),
+            ],
+            "clangd.checkUpdates": False,
+            "C_Cpp.intelliSenseEngine": "disabled",
+            "git.enabled": False,
+            "files.watcherExclude": {
+                "**": False,
+                "**/.arc/**": True,
+                "**/.git/**": True,
+                "**/.cache/**": True,
+            },
+            "search.followSymlinks": False,
+            "search.exclude": {"**/compile_commands.json": True, "**/.cache/**": True},
+            "npm.autoDetect": "off",
+            "task.autoDetect": "off",
+            "window.title": "${activeEditorShort}${separator}" + name + "${separator}${appName}",
+        },
+        "extensions": {"recommendations": ["llvm-vs-code-extensions.vscode-clangd", "perseus.vscode-yandex-arc"]},
+        "tasks": {
+            "version": "2.0.0",
+            "tasks": [
+                current,
+                process_task(
+                    "Arcadia: Generate compilation database (choose folder)",
+                    ["prepare", "${input:arcadiaFolder}"] + common,
+                    root,
+                ),
+                process_task("Arcadia: Refresh workspace databases", ["refresh", str(workspace)], root),
+            ],
+            "inputs": [{
+                "id": "arcadiaFolder",
+                "type": "promptString",
+                "description": "Service/library folder, relative to this checkout (must be added to the workspace)",
+                "default": str(folders[0].relative_to(root)) if folders else "",
+            }],
+        },
+    }
+    atomic_json(workspace, config)
+    refresh(workspace)
+    print("Open in VS Code: {}".format(workspace))
+
+
+def prepare(args):
+    workspace = Path(args.workspace).expanduser().absolute() if args.workspace else None
+    if workspace:
+        root, folders = workspace_folders(workspace)
+        target = folder_in_checkout(args.folder, root, Path.cwd())
+        if target not in folders:
+            raise ValueError("First add this folder to the workspace: {}".format(target))
+    else:
+        target = Path(args.folder).expanduser().resolve()
+        root = checkout_for(target)
+        target = folder_in_checkout(target, root)
+    if not (target / "ya.make").is_file():
+        raise ValueError("No ya.make in selected folder: {}".format(target))
+    cache = checkout_cache(root) / "targets" / target.relative_to(root)
+    build = cache / "build"
+    flags = ["-r", "--force-build-depends", "-j", str(args.jobs)] + args.ya_arg
+    make = [str(root / "ya"), "make"] + flags + [
+        "--replace-result", "--no-src-links", "--output=" + str(build),
+        "--add-protobuf-result", "--add-flatbuf-result",
+    ] + ["--add-result=" + ext for ext in RESULT_EXTENSIONS]
+    dump = [str(root / "ya"), "dump", "compile-commands"] + flags + [
+        "--cmd-build-root=" + str(build), "--dont-strip-compiler-path",
+    ]
+    if args.dry_run:
+        print("Working directory: {}".format(target))
+        for command in (make, dump):
+            print(" ".join(shlex.quote(part) for part in command))
+        return
+    with locked(cache / "prepare.lock"):
+        build.mkdir(parents=True, exist_ok=True)
+        print("Generating sources and headers for {}".format(target), flush=True)
+        subprocess.run(make, cwd=target, check=True)
+        fd, name = tempfile.mkstemp(prefix=".compile_commands.", suffix=".json", dir=target)
+        pending = Path(name)
+        try:
+            with os.fdopen(fd, "w") as stream:
+                subprocess.run(dump, cwd=target, stdout=stream, check=True)
+            count = len(read_database(pending))
+            destination = target / "compile_commands.json"
+            if destination.exists():
+                shutil.copy2(destination, cache / "previous_compile_commands.json")
+            os.chmod(pending, 0o644)
+            os.replace(pending, destination)
+            print("Updated {} ({} commands)".format(destination, count))
+        finally:
+            if pending.exists():
+                pending.unlink()
+    if workspace:
+        refresh(workspace, preferred=target)
+    print("Ready. If needed, run 'clangd: Restart language server' in VS Code.")
+
+
+def positive_int(value):
+    number = int(value)
+    if number < 1:
+        raise argparse.ArgumentTypeError("must be at least 1")
+    return number
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    sub = parser.add_subparsers(dest="command", required=True)
+    init = sub.add_parser("init", help="create a workspace once, with selected folders")
+    init.add_argument("checkout")
+    init.add_argument("folders", nargs="*", help="folders relative to the checkout, or absolute paths")
+    init.add_argument("--output", help="workspace file location")
+    init.add_argument("--clangd", help="clangd executable (default: ya tool clangd)")
+    gen = sub.add_parser("prepare", help="generate headers and a compilation database for one folder")
+    gen.add_argument("folder")
+    gen.add_argument("--workspace", help="also refresh this workspace's combined database")
+    gen.add_argument("--jobs", type=positive_int, default=DEFAULT_JOBS)
+    gen.add_argument("--ya-arg", action="append", default=[], help="extra flag for both ya commands; use --ya-arg=-DNAME=value")
+    gen.add_argument("--dry-run", action="store_true")
+    sync = sub.add_parser("refresh", help="combine databases after adding/removing folders or generating in a terminal")
+    sync.add_argument("workspace")
+    args = parser.parse_args()
+    try:
+        if args.command == "init":
+            create_workspace(args)
+        elif args.command == "prepare":
+            prepare(args)
+        else:
+            refresh(Path(args.workspace).expanduser().absolute())
+    except (ValueError, OSError, KeyError, subprocess.CalledProcessError) as error:
+        print("arc-vscode: {}".format(error), file=sys.stderr)
+        return 1
+    except KeyboardInterrupt:
+        print("arc-vscode: cancelled", file=sys.stderr)
+        return 130
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

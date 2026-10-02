@@ -19,6 +19,9 @@ default_target_type = "symbolic"
 [arc_autostart.files]
 "home/.local/bin/arc-autostart" = "~/.local/bin/arc-autostart"
 
+[arc_vscode.files]
+"home/.local/bin/arc-vscode" = "~/.local/bin/arc-vscode"
+
 [arc_autostart_macos.files]
 "home-macos/.local/bin/arc-autostart-login" = "~/.local/bin/arc-autostart-login"
 "home-macos/Library/LaunchAgents/com.lorut0.arc-autostart.plist" = "~/Library/LaunchAgents/com.lorut0.arc-autostart.plist"
