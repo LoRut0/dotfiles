@@ -9,6 +9,11 @@ case "${DOTFILES_PROFILE:-}" in
             echo "LaunchAgent will load at the next graphical login: $agent" >&2
             exit 0
         fi
+        if [[ -d "$HOME/Applications/Alacritty.app" || -d /Applications/Alacritty.app ]]; then
+            bash "$HOME/.local/share/ssh-alacritty-url-handler/install.sh"
+        else
+            echo 'Install Alacritty and redeploy the mac profile to register ssh:// links.' >&2
+        fi
         target="$domain/com.lorut0.arc-autostart"
         if ! launchctl print "$target" >/dev/null 2>&1; then
             launchctl bootstrap "$domain" "$agent"

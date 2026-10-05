@@ -47,6 +47,9 @@ default_target_type = "symbolic"
 [alacritty.files]
 "home/.config/alacritty" = { target = "~/.config/alacritty", type = "symbolic", recurse = false }
 
+[ssh_alacritty_url_handler.files]
+"scripts/ssh-alacritty-url-handler" = { target = "~/.local/share/ssh-alacritty-url-handler", type = "symbolic", recurse = false }
+
 [kitty.files]
 "home/.config/kitty" = { target = "~/.config/kitty", type = "symbolic", recurse = false }
 

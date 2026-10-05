@@ -8,6 +8,7 @@ packages = [
   "fish",
   "yazi",
   "alacritty",
+  "ssh_alacritty_url_handler",
   "kitty",
   "vifm",
   "vlc",

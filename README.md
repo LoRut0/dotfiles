@@ -138,13 +138,23 @@ profile leaves tmux startup manual.
 The `mac` profile already deploys `~/.config/alacritty/alacritty.toml`. Install
 Alacritty separately using the DMG from the
 [official releases](https://github.com/alacritty/alacritty/releases/latest),
-moving `Alacritty.app` to `/Applications`, then apply the `mac` profile.
+moving `Alacritty.app` to `~/Applications` or `/Applications`, then apply the
+`mac` profile.
 
 A normal Alacritty window starts the local tmux automatically. To open an SSH
 window without a local tmux, run this on Mac and then connect to the VM from it:
 
 ```sh
 open -na Alacritty --args -o 'env.NO_TMUX="1"'
+```
+
+The `mac` profile also builds a small local URL handler in `~/Applications`
+and registers it for `ssh://` links. It opens each link as `ssh` in a new
+Alacritty window, without the local tmux auto-attach. To refresh just this
+handler after editing it, run:
+
+```sh
+bash scripts/ssh-alacritty-url-handler/install.sh
 ```
 
 In the VM's tmux, select text and press `y` or `Enter`; Alacritty writes the text
