@@ -9,14 +9,11 @@ import json
 import os
 from pathlib import Path
 import re
-import shlex
-import shutil
 import subprocess
 import sys
 import tempfile
 
 
-RESULT_EXTENSIONS = (".h", ".hh", ".hpp", ".inc", ".ipp", ".inl", ".c", ".cc", ".cpp", ".C", ".cxx")
 DEFAULT_JOBS = max(1, min(6, (os.cpu_count() or 2) // 2))
 
 
@@ -238,42 +235,16 @@ def prepare(args):
         target = Path(args.folder).expanduser().resolve()
         root = checkout_for(target)
         target = folder_in_checkout(target, root)
-    if not (target / "ya.make").is_file():
-        raise ValueError("No ya.make in selected folder: {}".format(target))
-    cache = checkout_cache(root) / "targets" / target.relative_to(root)
-    build = cache / "build"
-    flags = ["-r", "--force-build-depends", "-j", str(args.jobs)] + args.ya_arg
-    make = [str(root / "ya"), "make"] + flags + [
-        "--replace-result", "--no-src-links", "--output=" + str(build),
-        "--add-protobuf-result", "--add-flatbuf-result",
-    ] + ["--add-result=" + ext for ext in RESULT_EXTENSIONS]
-    dump = [str(root / "ya"), "dump", "compile-commands"] + flags + [
-        "--cmd-build-root=" + str(build), "--dont-strip-compiler-path",
-    ]
+    # Resolve the Dotter symlink to find the shared generator even when only
+    # the optional vscode-arc profile is deployed.
+    generator = Path(__file__).resolve().with_name("arc-compdb")
+    command = [str(generator), str(target), "--jobs", str(args.jobs)]
+    command += ["--ya-arg=" + flag for flag in args.ya_arg]
     if args.dry_run:
-        print("Working directory: {}".format(target))
-        for command in (make, dump):
-            print(" ".join(shlex.quote(part) for part in command))
+        command.append("--dry-run")
+    subprocess.run(command, check=True)
+    if args.dry_run:
         return
-    with locked(cache / "prepare.lock"):
-        build.mkdir(parents=True, exist_ok=True)
-        print("Generating sources and headers for {}".format(target), flush=True)
-        subprocess.run(make, cwd=target, check=True)
-        fd, name = tempfile.mkstemp(prefix=".compile_commands.", suffix=".json", dir=target)
-        pending = Path(name)
-        try:
-            with os.fdopen(fd, "w") as stream:
-                subprocess.run(dump, cwd=target, stdout=stream, check=True)
-            count = len(read_database(pending))
-            destination = target / "compile_commands.json"
-            if destination.exists():
-                shutil.copy2(destination, cache / "previous_compile_commands.json")
-            os.chmod(pending, 0o644)
-            os.replace(pending, destination)
-            print("Updated {} ({} commands)".format(destination, count))
-        finally:
-            if pending.exists():
-                pending.unlink()
     if workspace:
         refresh(workspace, preferred=target)
     print("Ready. If needed, run 'clangd: Restart language server' in VS Code.")

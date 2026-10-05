@@ -3,6 +3,7 @@ packages = [
   "zsh_plugins",
   "arc_autostart",
   "arc_autostart_macos",
+  "arc_compdb",
   "zsh_agent",
   "fish",
   "yazi",

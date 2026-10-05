@@ -5,20 +5,33 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import time
 import unittest
 
 
 HELPER = Path(__file__).resolve().parents[1] / "home/.local/bin/arc-vscode"
+COMPDB = HELPER.with_name("arc-compdb")
 FAKE_YA = r'''#!/usr/bin/env python3
-import json, os, pathlib, sys
+import json, os, pathlib, sys, time
 args = sys.argv[1:]
 with open(os.environ["YA_CALLS"], "a") as stream:
     stream.write(json.dumps({"args": args, "cwd": os.getcwd()}) + "\n")
 if os.environ.get("YA_FAILURE") == args[0]:
     sys.exit(9)
+if args[0] == "make" and os.environ.get("YA_WAIT"):
+    for _ in range(1000):
+        if pathlib.Path(os.environ["YA_WAIT"]).exists():
+            break
+        time.sleep(0.01)
+    else:
+        sys.exit("Timed out waiting for test")
 if args[0] == "dump":
     if os.environ.get("YA_FAILURE") == "invalid-json":
         print("incomplete database")
+    elif os.environ.get("YA_FAILURE") == "empty-json":
+        print("[]")
+    elif os.environ.get("YA_FAILURE") == "invalid-entry":
+        print('[{"directory":"relative","file":"main.cpp","command":"clang++ main.cpp"}]')
     else:
         build = next(a.split("=", 1)[1] for a in args if a.startswith("--cmd-build-root="))
         print(json.dumps([{"directory": os.getcwd(), "file": "src/main.cpp",
@@ -50,11 +63,11 @@ class ArcVscodeTest(unittest.TestCase):
         (path / "ya.make").touch()
         return path
 
-    def run_helper(self, *args, failure=None, ok=True, cwd=None):
+    def run_helper(self, *args, failure=None, ok=True, cwd=None, script=HELPER):
         env = self.env.copy()
         if failure:
             env["YA_FAILURE"] = failure
-        result = subprocess.run([str(HELPER), *map(str, args)], env=env,
+        result = subprocess.run([str(script), *map(str, args)], env=env,
                                 cwd=cwd or self.root, text=True, capture_output=True)
         if ok:
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -98,13 +111,79 @@ class ArcVscodeTest(unittest.TestCase):
         self.init(self.a)
         previous = (self.a / "compile_commands.json").read_bytes()
         combined = self.combined_path().read_bytes()
-        for failure in ("make", "dump", "invalid-json"):
+        for failure in ("make", "dump", "invalid-json", "empty-json", "invalid-entry"):
             with self.subTest(failure=failure):
                 self.run_helper("prepare", self.a, "--workspace", self.workspace,
                                 failure=failure, ok=False)
                 self.assertEqual((self.a / "compile_commands.json").read_bytes(), previous)
                 self.assertEqual(self.combined_path().read_bytes(), combined)
-                self.assertEqual(list(self.a.glob(".compile_commands.*.json")), [])
+                self.assertEqual(list(self.a.glob(".compile_commands.*")), [])
+
+    def test_standalone_defaults_to_current_folder_and_forwards_flags(self):
+        self.run_helper("--jobs", "3", "--ya-arg=-DNAME=with spaces",
+                        "--ya-arg=-DOTHER=yes", cwd=self.a, script=COMPDB)
+        calls = [json.loads(line) for line in (self.base / "calls").read_text().splitlines()]
+        self.assertEqual([c["args"][0] for c in calls], ["make", "dump"])
+        for call in calls:
+            self.assertEqual(call["cwd"], str(self.a))
+            self.assertEqual(call["args"][call["args"].index("-j") + 1], "3")
+            self.assertIn("-DNAME=with spaces", call["args"])
+            self.assertIn("-DOTHER=yes", call["args"])
+        self.assertTrue((self.a / "compile_commands.json").is_file())
+        self.assertFalse(self.workspace.exists())
+
+    def test_dry_run_does_not_build_or_change_databases(self):
+        self.init(self.a)
+        previous = self.combined_path().read_bytes()
+        for script, args in ((COMPDB, [self.a]),
+                             (HELPER, ["prepare", self.a, "--workspace", self.workspace])):
+            result = self.run_helper(*args, "--dry-run", script=script)
+            self.assertIn("--cmd-build-root=", result.stdout)
+            self.assertIn("--add-protobuf-result", result.stdout)
+            self.assertIn("--add-flatbuf-result", result.stdout)
+        self.assertFalse((self.base / "calls").exists())
+        self.assertFalse((self.a / "compile_commands.json").exists())
+        self.assertFalse(list((self.base / "cache").rglob("targets")))
+        self.assertEqual(self.combined_path().read_bytes(), previous)
+
+    def test_standalone_rejects_invalid_targets_and_options_before_build(self):
+        no_make = self.a / "src"
+        no_make.mkdir()
+        for args in ([self.root], [self.base], [no_make], [self.a / "missing"],
+                     [self.a, self.b], [self.a, "--unknown"], [self.a, "--jobs"],
+                     [self.a, "--jobs=0"], [self.a, "--jobs", "no"],
+                     [self.a, "--jobs", ""], [self.a, "--ya-arg"]):
+            with self.subTest(args=args):
+                self.run_helper(*args, script=COMPDB, ok=False)
+        self.assertFalse((self.base / "calls").exists())
+
+    def test_standalone_separates_worktree_caches(self):
+        other = self.make_checkout(self.base / "other" / self.root.name)
+        foreign = self.make_folder(other / "services/first")
+        self.run_helper(self.a, script=COMPDB)
+        self.run_helper(foreign, script=COMPDB)
+        first = json.loads((self.a / "compile_commands.json").read_text())
+        second = json.loads((foreign / "compile_commands.json").read_text())
+        self.assertNotEqual(first[0]["arguments"][1], second[0]["arguments"][1])
+
+    def test_generation_lock_covers_build_and_is_released_on_exit(self):
+        release = self.base / "release-build"
+        env = dict(self.env, YA_WAIT=str(release))
+        with subprocess.Popen([str(COMPDB), str(self.a)], env=env,
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as process:
+            try:
+                deadline = time.monotonic() + 5
+                while not (self.base / "calls").exists() and time.monotonic() < deadline:
+                    time.sleep(0.01)
+                self.assertTrue((self.base / "calls").exists(), "Build did not start")
+                result = self.run_helper(self.a, script=COMPDB, ok=False)
+                self.assertIn("Another task", result.stderr)
+                self.assertEqual(len((self.base / "calls").read_text().splitlines()), 1)
+            finally:
+                release.touch()
+                stdout, stderr = process.communicate(timeout=10)
+            self.assertEqual(process.returncode, 0, stdout + stderr)
+        self.run_helper(self.a, script=COMPDB)
 
     def test_prepare_current_directory_from_terminal(self):
         self.init(self.a)

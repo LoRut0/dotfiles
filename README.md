@@ -8,9 +8,9 @@ versioned profiles in `.dotter/profiles/`:
 
 | Profile | Purpose |
 | --- | --- |
-| `mac` | macOS workstation, including Karabiner, tmux and Arc mounts |
+| `mac` | macOS workstation, including Karabiner, tmux, Arc mounts and `arc-compdb` |
 | `linux-desktop` | Full Linux desktop with Sway, Hyprland and bars |
-| `linux-vm` | Linux VM with Zsh as the login shell and Arc worktrees; no automatic tmux startup |
+| `linux-vm` | Linux VM with Zsh as the login shell, Arc worktrees and `arc-compdb`; no automatic tmux startup |
 | `ai` | Claude and Codex configuration on macOS or Linux |
 | `vscode-arc` | Optional VS Code workspace helper for Arc checkouts on macOS or Linux |
 | `nvim` | Optional Neovim configuration on macOS or Linux |
@@ -184,6 +184,39 @@ a failed mount without rebooting, run `~/.local/bin/arc-autostart mac` on macOS
 or `~/.local/bin/arc-autostart linux-vm --slot first` on the VM, replacing
 `first` with the affected slot name.
 
+## Arc compilation databases
+
+The `mac` and `linux-vm` profiles include the `arc_compdb` package, which links
+the Bash script `arc-compdb` into `~/.local/bin`. Both profiles already add that
+directory to Zsh's `PATH`. It requires Bash 3.2+, Python 3 and a mounted Arc
+checkout with `ya`; it works independently of any editor or VS Code workspace.
+
+Run it from a service/library directory containing `ya.make`, or pass that
+directory explicitly:
+
+```sh
+arc-compdb
+arc-compdb ~/arcadia/taxi/uservices/services/grocery-api --jobs 4
+arc-compdb . --ya-arg=-DNAME=value --dry-run
+```
+
+It runs `ya make` to generate sources and headers, then `ya dump compile-commands`
+to write `compile_commands.json` into the selected directory. This also works
+for Neovim. `--dry-run` only prints commands. `--jobs N` overrides the default
+of half the CPUs, with a minimum of one and a maximum of six workers. Repeat
+`--ya-arg=FLAG` to pass additional arguments to both `ya` commands.
+
+Generated headers and sources stay under
+`~/.cache/arc-vscode/<checkout>-<hash>/targets/<service-path>/build`
+(or `$XDG_CACHE_HOME/arc-vscode/...`). The existing cache name is retained so
+previously generated databases keep working. Both commands use the same build
+root, and the database retains the compiler's absolute path. There are no
+generated-source links in the checkout. Concurrent generation for the same
+target is rejected. A valid new database replaces the old one atomically;
+the previous copy is saved beside the build directory as
+`previous_compile_commands.json`. Build, dump or validation errors leave the
+existing database in place.
+
 ## VS Code in Arcadia
 
 The separate `vscode-arc` profile installs `~/.local/bin/arc-vscode`:
@@ -237,25 +270,23 @@ removing folders, or adding a folder with an already working database, run
 **Arcadia: Refresh workspace databases**. Only folders belonging to that checkout
 are accepted. These C++ tasks do not configure Python analysis or debugger launches.
 
-The same generation is available from a terminal, including for Neovim:
+VS Code tasks call `arc-vscode prepare`, which delegates generation to the same
+`arc-compdb` script and then refreshes the workspace's combined database. Existing
+workspaces and task definitions continue to work. The generator is located beside
+the helper in the repository, so the optional `vscode-arc` profile can also run
+these tasks without deploying a machine profile.
+
+To generate and refresh the workspace from a terminal:
 
 ```sh
 arc-vscode prepare ~/arcadia-wt/first/taxi/uservices/services/grocery-goals \
   --workspace /codenv/workspace/arcadia-first.code-workspace
-# Inspect commands without running a build:
-arc-vscode prepare . --dry-run
 ```
 
-`--workspace` is optional when only the local database is needed. Use `--jobs N`
-to change the default limit of six workers, or repeat `--ya-arg=-DNAME=value` to
-pass build flags to both `ya make` and `ya dump compile-commands`.
-
-Generated headers and sources live under
-`~/.cache/arc-vscode/<checkout>-<hash>/targets/<service-path>/build`. Both `ya`
-commands use that same build root, and the database retains the compiler's
-absolute path. There are no generated-source links in the checkout. A valid new
-database replaces the old one atomically; the previous copy is saved beside the
-build directory as `previous_compile_commands.json`.
+`prepare` accepts the same `--jobs`, `--ya-arg` and `--dry-run` options.
+After running standalone `arc-compdb`, use **Arcadia: Refresh workspace databases**
+or `arc-vscode refresh /codenv/workspace/arcadia-first.code-workspace` if you also
+want to update VS Code's combined database.
 
 VS Code reads a combined database in that checkout's cache, built from the
 selected folders' databases. This includes their transitive dependencies, so

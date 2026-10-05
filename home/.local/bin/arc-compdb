@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+# Generate a compilation database for one Arc service/library. Bash 3.2+.
+set -eo pipefail
+
+usage() {
+    cat <<'EOF'
+Usage: arc-compdb [FOLDER] [--jobs N] [--ya-arg=FLAG] [--dry-run]
+
+Generate sources, headers and compile_commands.json in FOLDER (default: .).
+Requires a mounted Arc checkout with ya, Bash 3.2+ and Python 3.
+
+  -j, --jobs N     Parallel workers (default: half the CPUs, at most 6).
+  --ya-arg=FLAG    Extra argument for both ya commands; may be repeated.
+  --dry-run       Print the commands without building or changing files.
+  -h, --help      Show this help.
+
+Examples:
+  arc-compdb
+  arc-compdb ~/arcadia/taxi/uservices/services/grocery-api --jobs 4
+  arc-compdb . --ya-arg=-DNAME=value --dry-run
+EOF
+}
+
+die() { printf 'arc-compdb: %s\n' "$*" >&2; exit 1; }
+
+folder=.
+folder_given=false
+jobs=
+dry_run=false
+extra_flags=()
+while (($#)); do
+    case "$1" in
+        -h|--help) usage; exit 0 ;;
+        -j|--jobs|--ya-arg)
+            (($# >= 2)) || die "Missing value for $1"
+            if [[ $1 == --ya-arg ]]; then
+                extra_flags+=("$2")
+            else
+                jobs=$2
+                [[ $jobs =~ ^[1-9][0-9]*$ ]] || die '--jobs must be a positive integer'
+            fi
+            shift 2 ;;
+        --jobs=*)
+            jobs=${1#*=}
+            [[ $jobs =~ ^[1-9][0-9]*$ ]] || die '--jobs must be a positive integer'
+            shift ;;
+        --ya-arg=*) extra_flags+=("${1#*=}"); shift ;;
+        --dry-run) dry_run=true; shift ;;
+        --) shift; break ;;
+        -*) die "Unknown option: $1" ;;
+        *)
+            [[ $folder_given == false ]] || die 'Select only one service or library folder'
+            folder=$1; folder_given=true; shift ;;
+    esac
+done
+if (($#)); then
+    [[ $# == 1 && $folder_given == false ]] || die 'Select only one service or library folder'
+    folder=$1
+fi
+
+command -v python3 >/dev/null || die 'Python 3 is required'
+target=$(cd -- "$folder" && pwd -P) || die "Cannot open folder: $folder"
+root=$target
+while [[ ! -f $root/.arc/HEAD || ! -f $root/ya ]]; do
+    [[ $root != / ]] || die "Not inside a mounted Arc checkout: $target"
+    root=${root%/*}
+    root=${root:-/}
+done
+[[ $target != "$root" ]] || die 'Select a service or library folder, rather than the whole checkout'
+[[ -f $target/ya.make ]] || die "No ya.make in selected folder: $target"
+[[ -x $root/ya ]] || die "ya is not executable: $root/ya"
+
+if [[ -z $jobs ]]; then
+    jobs=$(python3 -c 'import os; print(max(1, min(6, (os.cpu_count() or 2) // 2)))')
+fi
+# Keep the existing cache paths so previously generated headers remain usable.
+cache=$(python3 - "$root" <<'PY'
+import hashlib, os, sys
+from pathlib import Path
+root = Path(sys.argv[1])
+base = Path(os.environ.get("XDG_CACHE_HOME", str(Path.home() / ".cache"))).absolute()
+digest = hashlib.sha256(str(root).encode()).hexdigest()[:12]
+print(base / "arc-vscode" / (root.name + "-" + digest))
+PY
+)
+cache="$cache/targets/${target#"$root"/}"
+build=$cache/build
+flags=(-r --force-build-depends -j "$jobs" "${extra_flags[@]}")
+make=("$root/ya" make "${flags[@]}" --replace-result --no-src-links
+    "--output=$build" --add-protobuf-result --add-flatbuf-result)
+for ext in .h .hh .hpp .inc .ipp .inl .c .cc .cpp .C .cxx; do
+    make+=("--add-result=$ext")
+done
+dump=("$root/ya" dump compile-commands "${flags[@]}"
+    "--cmd-build-root=$build" --dont-strip-compiler-path)
+if [[ $dry_run == true ]]; then
+    printf 'Working directory: %s\n' "$target"
+    printf '%q ' "${make[@]}"; printf '\n'
+    printf '%q ' "${dump[@]}"; printf '\n'
+    exit 0
+fi
+
+mkdir -p "$cache"
+exec 9>"$cache/prepare.lock"
+# The inherited descriptor keeps this lock held by Bash until it exits.
+# Python provides flock on both macOS and Linux without a separate flock tool.
+python3 - <<'PY'
+import fcntl, sys
+try:
+    fcntl.flock(9, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except BlockingIOError:
+    sys.exit("arc-compdb: Another task is updating this database; wait for it to finish")
+PY
+
+pending=
+cleanup() { if [[ -n $pending ]]; then rm -f -- "$pending"; fi; }
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+mkdir -p "$build"
+cd -- "$target"
+printf 'Generating sources and headers for %s\n' "$target"
+"${make[@]}"
+pending=$(mktemp "$target/.compile_commands.XXXXXXXX")
+"${dump[@]}" >"$pending"
+count=$(python3 - "$pending" <<'PY'
+import json, os, sys
+try:
+    with open(sys.argv[1]) as stream:
+        database = json.load(stream)
+    if not isinstance(database, list) or not database:
+        raise ValueError("Compilation database is empty or invalid")
+    for item in database:
+        if not isinstance(item, dict) or not all(k in item for k in ("file", "directory")):
+            raise ValueError("Invalid compilation database entry")
+        if not item.get("command") and not item.get("arguments"):
+            raise ValueError("Missing compiler command")
+        if not isinstance(item["directory"], str) or not os.path.isabs(item["directory"]):
+            raise ValueError("Compiler working directory must be absolute")
+    print(len(database))
+except (OSError, ValueError) as error:
+    sys.exit("arc-compdb: " + str(error))
+PY
+)
+destination=$target/compile_commands.json
+if [[ -e $destination ]]; then
+    cp -p "$destination" "$cache/previous_compile_commands.json"
+fi
+chmod 644 "$pending"
+mv -f "$pending" "$destination"
+pending=
+printf 'Updated %s (%s commands)\n' "$destination" "$count"
