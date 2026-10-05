@@ -30,6 +30,10 @@ deployment adds a small startup fallback to the existing Bash profile files
 instead; interactive Bash is then replaced by a Zsh login shell while
 non-interactive scripts stay in Bash.
 
+The VM profile also deploys a minimal tmux configuration with mouse support for
+scrolling pane history. After deploying it, apply it to an existing tmux server
+with `tmux source-file ~/.config/tmux/tmux.conf`. New servers load it automatically.
+
 Replace `linux-vm` with the desired profile. The wrapper downloads a pinned
 Dotter v0.13.5 executable for macOS ARM64 or Linux x86_64/ARM64 on first use,
 checks its SHA-256 digest, and keeps it in the ignored `.dotter/bin/` directory.

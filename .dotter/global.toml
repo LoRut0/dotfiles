@@ -78,6 +78,9 @@ default_target_type = "symbolic"
 [tmux_linux.files]
 "home-linux/.config/tmux" = { target = "~/.config/tmux", type = "symbolic", recurse = false }
 
+[tmux_vm.files]
+"home-linux/.config/tmux-vm" = { target = "~/.config/tmux", type = "symbolic", recurse = false }
+
 [sway.files]
 "home-linux/.config/sway" = { target = "~/.config/sway", type = "symbolic", recurse = false }
 
