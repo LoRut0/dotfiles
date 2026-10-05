@@ -2,7 +2,6 @@ packages = [
   "zsh",
   "zsh_plugins",
   "zsh_agent",
-  "nvim",
   "fish",
   "yazi",
   "alacritty",

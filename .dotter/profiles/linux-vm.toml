@@ -1,2 +1,2 @@
 # Minimal VM profile. Add packages here only when the VM needs them.
-packages = ["zsh", "zsh_plugins", "nvim", "vm_no_tmux", "vm_zsh_fallback", "arc_autostart", "arc_autostart_linux_vm"]
+packages = ["zsh", "zsh_plugins", "vm_no_tmux", "vm_zsh_fallback", "arc_autostart", "arc_autostart_linux_vm"]

@@ -4,7 +4,6 @@ packages = [
   "arc_autostart",
   "arc_autostart_macos",
   "zsh_agent",
-  "nvim",
   "fish",
   "yazi",
   "alacritty",

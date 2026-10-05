@@ -1,0 +1,2 @@
+# Optional Neovim configuration, deployed separately from machine profiles.
+packages = ["nvim"]

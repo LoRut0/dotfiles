@@ -10,9 +10,10 @@ versioned profiles in `.dotter/profiles/`:
 | --- | --- |
 | `mac` | macOS workstation, including Karabiner, tmux and Arc mounts |
 | `linux-desktop` | Full Linux desktop with Sway, Hyprland and bars |
-| `linux-vm` | Linux VM with Zsh as the login shell, Neovim and Arc worktrees; no automatic tmux startup |
+| `linux-vm` | Linux VM with Zsh as the login shell and Arc worktrees; no automatic tmux startup |
 | `ai` | Claude and Codex configuration on macOS or Linux |
 | `vscode-arc` | Optional VS Code workspace helper for Arc checkouts on macOS or Linux |
+| `nvim` | Optional Neovim configuration on macOS or Linux |
 
 From the repository root, review a profile before deploying it:
 
@@ -64,6 +65,32 @@ The machine profiles also deploy the vendored Zsh plugins from
 recorded there. Until that link is deployed, `.zshrc` can use the previous
 `~/.zsh` copies. Syntax highlighting loads last, after other Zsh widgets and
 local overrides.
+
+## Neovim
+
+The separate `nvim` profile links `home/.config/nvim` to `~/.config/nvim`,
+including the LazyVim configuration, plugins, keybindings, and Arcadia search.
+Install the Neovim executable separately, then deploy its configuration:
+
+```sh
+bash dotter.sh nvim --dry-run deploy
+bash dotter.sh nvim deploy
+```
+
+It uses its own Dotter cache and can be deployed independently or alongside a
+machine profile, `ai`, and `vscode-arc`. The `mac`, `linux-desktop`, and `linux-vm`
+profiles no longer include Neovim.
+
+When migrating an existing installation, deploy the current machine profile
+first so Dotter releases the Neovim link from its shared cache, then deploy
+`nvim`. For example, on a VM:
+
+```sh
+bash dotter.sh linux-vm deploy
+bash dotter.sh nvim deploy
+```
+
+Subsequent deployments manage their links independently.
 
 ## Arc mounts at startup
 
