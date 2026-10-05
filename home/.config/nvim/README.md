@@ -35,6 +35,13 @@ Snacks terminal on the right; `\ab` adds the current file, and visual `\as`
 adds the selected line range. The same actions are available as `:Codex` and
 `:CodexHere`. Codex starts in Neovim's current working directory (`:pwd`).
 
+## OpenAPI
+
+OpenAPI YAML and JSON files support `gd` on a `$ref` value. The OpenAPI
+navigator follows both local `#/components/...` pointers and relative links to
+other files, alongside the existing YAML language server. Use `Ctrl+O` to jump
+back after following a definition.
+
 ## Surround shortcuts
 
 In both terminal Neovim and VS Code, type `\W` followed by a surrounding
