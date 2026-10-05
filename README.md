@@ -30,8 +30,9 @@ deployment adds a small startup fallback to the existing Bash profile files
 instead; interactive Bash is then replaced by a Zsh login shell while
 non-interactive scripts stay in Bash.
 
-The VM profile also deploys a minimal tmux configuration with mouse support for
-scrolling pane history. After deploying it, apply it to an existing tmux server
+The VM profile also deploys a minimal tmux configuration with the `Ctrl+A` prefix
+and mouse support for scrolling pane history. Press `Ctrl+A` twice to send a
+literal `Ctrl+A` to the application. Apply it to an existing tmux server
 with `tmux source-file ~/.config/tmux/tmux.conf`. New servers load it automatically.
 
 Replace `linux-vm` with the desired profile. The wrapper downloads a pinned
