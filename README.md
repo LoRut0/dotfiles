@@ -8,7 +8,7 @@ versioned profiles in `.dotter/profiles/`:
 
 | Profile | Purpose |
 | --- | --- |
-| `mac` | macOS workstation, including Karabiner, tmux, Arc mounts and `arc-compdb`; tmux starts manually |
+| `mac` | macOS workstation, including Karabiner, tmux, Arc mounts and `arc-compdb`; tmux starts automatically |
 | `linux-desktop` | Full Linux desktop with Sway, Hyprland and bars |
 | `linux-vm` | Linux VM with Zsh as the login shell, Arc worktrees and `arc-compdb`; no automatic tmux startup |
 | `ai` | Claude and Codex configuration on macOS or Linux |
@@ -105,13 +105,14 @@ to the attached terminal. OSC 52 reception is enabled for applications such as
 Neovim and nested tmux sessions, and a hook forwards received text to an available
 local desktop clipboard.
 
-Use **terminal on Mac → SSH → tmux on VM** for remote work. The Mac and VM
-profiles leave tmux startup manual, so opening a terminal does not introduce an
-outer tmux session. Start `tmux` explicitly when you want to use it locally.
-Existing local sessions keep running until you detach or exit them.
+On Mac and Linux desktop, ordinary interactive terminals automatically attach
+to tmux. The VM profile leaves startup manual. Set `NO_TMUX=1` for a new terminal
+to skip the local tmux, for example when you want **terminal on Mac → SSH → tmux
+on VM** with a single tmux layer. See the Alacritty command below.
 
 Copying with `y` or `Enter` in the VM's tmux requires a terminal that accepts
-OSC 52 clipboard writes. For iTerm2, enable **Settings → General → Selection →
+OSC 52 clipboard writes. The deployed Alacritty configuration explicitly enables
+this with `terminal.osc52 = "OnlyCopy"`. For iTerm2, enable **Settings → General → Selection →
 Applications in terminal may access clipboard**. The terminal then updates the
 Mac clipboard directly over the existing SSH connection; no local tmux is
 needed. See the [iTerm2 settings documentation](https://iterm2.com/documentation-preferences-general.html)
@@ -130,7 +131,27 @@ After deploying the machine profile, run
 `tmux source-file ~/.config/tmux/tmux.conf` on each existing server; future servers
 load it automatically. This does not replace shells already running in panes or
 increase the history retained by existing panes on older tmux versions. The VM
-and Mac profiles leave tmux startup manual.
+profile leaves tmux startup manual.
+
+### Alacritty on Mac
+
+The `mac` profile already deploys `~/.config/alacritty/alacritty.toml`. Install
+Alacritty separately using the DMG from the
+[official releases](https://github.com/alacritty/alacritty/releases/latest),
+moving `Alacritty.app` to `/Applications`, then apply the `mac` profile.
+
+A normal Alacritty window starts the local tmux automatically. To open an SSH
+window without a local tmux, run this on Mac and then connect to the VM from it:
+
+```sh
+open -na Alacritty --args -o 'env.NO_TMUX="1"'
+```
+
+In the VM's tmux, select text and press `y` or `Enter`; Alacritty writes the text
+to the Mac clipboard through OSC 52. For visible text, holding `Shift` while
+selecting bypasses application mouse reporting, so `Cmd+C` copies Alacritty's
+own selection. This also works while tmux mouse support is enabled. See the
+[Alacritty configuration reference](https://alacritty.org/config-alacritty.html).
 
 ## Neovim
 
@@ -313,8 +334,9 @@ stores the helper and its tests. Run the tests with
 
 ## Terminal on macOS
 
-New Terminal shells register an exit hook. When the outer shell exits, a detached
-helper waits for its `login` process to end and requests a normal quit of that Terminal PID only
+New Terminal shells register an exit hook before attaching to tmux. When the
+outer shell exits (including after tmux detaches), a detached helper waits for
+its `login` process to end and requests a normal quit of that Terminal PID only
 if it has no remaining child processes. This also handles separate instances
 started by Karabiner with `open -n`; other windows with live sessions keep their
 instance running. Nested shells and tmux panes do not register the hook.
