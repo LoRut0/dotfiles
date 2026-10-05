@@ -2,6 +2,11 @@
 -- Default keymaps that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/keymaps.lua
 -- Add any additional keymaps here
 
+if vim.g.vscode then
+  require("config.vscode-keymaps")
+  return
+end
+
 -- Make <Esc> exit terminal mode and return to Normal mode
 vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { desc = "Exit terminal mode" })
 vim.keymap.set("n", "<leader>y", require("osc52").copy_operator, { expr = true })

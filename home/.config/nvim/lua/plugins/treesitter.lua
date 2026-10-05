@@ -22,9 +22,10 @@ return {
     ---@class lazyvim.TSConfig: TSConfig
     opts = {
       -- LazyVim config for treesitter
-      indent = { enable = true }, ---@type lazyvim.TSFeat
-      highlight = { enable = true }, ---@type lazyvim.TSFeat
-      folds = { enable = true }, ---@type lazyvim.TSFeat
+      -- Keep parsing/textobjects in VS Code; its editor owns the visual features.
+      indent = { enable = not vim.g.vscode }, ---@type lazyvim.TSFeat
+      highlight = { enable = not vim.g.vscode }, ---@type lazyvim.TSFeat
+      folds = { enable = not vim.g.vscode }, ---@type lazyvim.TSFeat
       ensure_installed = {
         "asm",
         "bash",
