@@ -1,3 +1,7 @@
+[terminal]
+# Accept copied text from remote tmux over SSH.
+osc52 = "OnlyCopy"
+
 [font]
 normal = {family = "JetBrainsMono Nerd Font", style = "Regular"}
 size = 12.0
