@@ -3,6 +3,11 @@ set -euo pipefail
 
 case "${DOTFILES_PROFILE:-}" in
     mac)
+        yazi_ya=/opt/homebrew/bin/ya
+        if [[ -L "$yazi_ya" && "$(readlink "$yazi_ya")" == ../Cellar/yazi/*/bin/ya ]]; then
+            rm "$yazi_ya"
+            echo "Removed Homebrew Yazi's ya command: $yazi_ya"
+        fi
         agent="$HOME/Library/LaunchAgents/com.lorut0.arc-autostart.plist"
         domain="gui/$(id -u)"
         if ! launchctl print "$domain" >/dev/null 2>&1; then
