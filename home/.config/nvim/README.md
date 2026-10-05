@@ -13,7 +13,8 @@ Inside an Arc checkout or worktree (detected by its `.arc` marker), text,
 word, and file searches use `ya grep --remote` with the selected directory
 as their scope. Results come from **trunk**, so local edits and branch-only
 files are not indexed; opening a result uses the corresponding local file.
-Each query returns at most 1,000 results. `ya` must be available on PATH.
+Each query returns at most 1,000 results. The search runs the `ya` executable
+from the current Arc checkout, even when Yazi's `ya` is first on `PATH`.
 
 File search (`\ff` for cwd, `\fF` or `\<Space>` for the root) waits for a
 query instead of scanning the checkout. Type a path fragment; space-separated

@@ -22,7 +22,8 @@ end
 
 local function remote(opts, ctx, files)
   local cwd = opts.cwd or vim.uv.cwd()
-  if not M.find_root(cwd) then
+  local root = M.find_root(cwd)
+  if not root then
     local source = files and "files" or "grep"
     return require("snacks.picker.source." .. source)[source](opts, ctx)
   end
@@ -31,8 +32,10 @@ local function remote(opts, ctx, files)
   if vim.trim(search) == "" then
     return empty()
   end
-  if vim.fn.executable("ya") ~= 1 then
-    Snacks.notify.error("Arcadia search requires `ya` on PATH")
+  -- Homebrew's Yazi also installs `ya`; use the executable from this checkout.
+  local ya = root .. "/ya"
+  if vim.fn.executable(ya) ~= 1 then
+    Snacks.notify.error("Arcadia search requires `" .. ya .. "`")
     return empty()
   end
 
@@ -54,7 +57,7 @@ local function remote(opts, ctx, files)
   end
 
   return require("snacks.picker.source.proc").proc(ctx:opts({
-    cmd = "ya",
+    cmd = ya,
     args = args,
     cwd = cwd,
     transform = function(item)
