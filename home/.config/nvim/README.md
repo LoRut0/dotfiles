@@ -15,6 +15,9 @@ as their scope. Results come from **trunk**, so local edits and branch-only
 files are not indexed; opening a result uses the corresponding local file.
 Each query returns at most 1,000 results. `ya` must be available on PATH.
 
-File search (`\ff` or `\<Space>`) waits for a query instead of scanning
-the checkout. Type a path fragment; space-separated fragments match in order.
+File search (`\ff` for cwd, `\fF` or `\<Space>` for the root) waits for a
+query instead of scanning the checkout. Type a path fragment; space-separated
+fragments match in order.
 Outside Arc checkouts, the usual Snacks search backends remain in use.
+
+The explorer opens at cwd with `\e` and at the project root with `\E`.
