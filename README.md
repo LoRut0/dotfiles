@@ -8,7 +8,7 @@ versioned profiles in `.dotter/profiles/`:
 
 | Profile | Purpose |
 | --- | --- |
-| `mac` | macOS workstation, including Karabiner, tmux, Arc mounts and `arc-compdb` |
+| `mac` | macOS workstation, including Karabiner, tmux, Arc mounts and `arc-compdb`; tmux starts manually |
 | `linux-desktop` | Full Linux desktop with Sway, Hyprland and bars |
 | `linux-vm` | Linux VM with Zsh as the login shell, Arc worktrees and `arc-compdb`; no automatic tmux startup |
 | `ai` | Claude and Codex configuration on macOS or Linux |
@@ -105,14 +105,23 @@ to the attached terminal. OSC 52 reception is enabled for applications such as
 Neovim and nested tmux sessions, and a hook forwards received text to an available
 local desktop clipboard.
 
-Terminal.app does not itself support OSC 52. For copying from a VM into the Mac
-clipboard, use **Terminal.app → local tmux on Mac → SSH → tmux on VM**, with this
-configuration deployed on both hosts. The local tmux receives the remote copy
-and passes it to `pbcopy`. The `mac` profile already starts tmux from ordinary
-interactive terminals. A direct SSH connection from Terminal.app without that
-local tmux layer does not update the Mac clipboard through this mechanism.
-Other terminal emulators need OSC 52 clipboard writes enabled. See the
-[tmux clipboard documentation](https://github.com/tmux/tmux/wiki/Clipboard).
+Use **terminal on Mac → SSH → tmux on VM** for remote work. The Mac and VM
+profiles leave tmux startup manual, so opening a terminal does not introduce an
+outer tmux session. Start `tmux` explicitly when you want to use it locally.
+Existing local sessions keep running until you detach or exit them.
+
+Copying with `y` or `Enter` in the VM's tmux requires a terminal that accepts
+OSC 52 clipboard writes. For iTerm2, enable **Settings → General → Selection →
+Applications in terminal may access clipboard**. The terminal then updates the
+Mac clipboard directly over the existing SSH connection; no local tmux is
+needed. See the [iTerm2 settings documentation](https://iterm2.com/documentation-preferences-general.html)
+and [tmux clipboard documentation](https://github.com/tmux/tmux/wiki/Clipboard).
+
+Terminal.app does not itself support OSC 52. To keep Terminal.app with only a
+remote tmux, it needs a local clipboard adapter such as
+[osc52pty](https://github.com/roy2220/osc52pty), installed separately. The existing
+tmux clipboard hook also supports deliberately nested sessions: the outer tmux
+on Mac receives the remote copy and passes it to `pbcopy`.
 
 In nested tmux, the first `Ctrl+A` reaches the outer server. To send a command
 to the inner server, press `Ctrl+A`, `Ctrl+A`, then the command key.
@@ -121,7 +130,7 @@ After deploying the machine profile, run
 `tmux source-file ~/.config/tmux/tmux.conf` on each existing server; future servers
 load it automatically. This does not replace shells already running in panes or
 increase the history retained by existing panes on older tmux versions. The VM
-profile still leaves tmux startup manual.
+and Mac profiles leave tmux startup manual.
 
 ## Neovim
 
@@ -304,9 +313,8 @@ stores the helper and its tests. Run the tests with
 
 ## Terminal on macOS
 
-New Terminal shells register an exit hook before attaching to tmux. When the
-outer shell exits (including after tmux detaches), a detached helper waits for
-its `login` process to end and requests a normal quit of that Terminal PID only
+New Terminal shells register an exit hook. When the outer shell exits, a detached
+helper waits for its `login` process to end and requests a normal quit of that Terminal PID only
 if it has no remaining child processes. This also handles separate instances
 started by Karabiner with `open -n`; other windows with live sessions keep their
 instance running. Nested shells and tmux panes do not register the hook.

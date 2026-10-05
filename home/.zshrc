@@ -7,8 +7,9 @@ if [[ $OSTYPE == darwin* && -o interactive && -z $TMUX ]]; then
     source "$HOME/.config/zsh/terminal-exit.zsh"
 fi
 
-# Каждый терминал — отдельный клиент tmux: список окон общий, но текущее окно
-# у каждого своё. Держится на session groups: базовая сессия хранит окна, а
+# На Mac и VM tmux запускается вручную: SSH не создаёт два слоя tmux.
+# На Linux desktop каждый терминал — отдельный клиент tmux: список окон общий,
+# но текущее окно у каждого своё. Держится на session groups: базовая сессия хранит окна, а
 # терминал получает собственную сессию-«вид» в той же группе и новое окно.
 # Отключить: NO_TMUX=1. На VM это делает маркер профиля Dotter
 # или systemd-detect-virt, если профиль ещё не успел развернуться.
@@ -18,7 +19,9 @@ if [[ -e "$HOME/.dotter-linux-vm" ]] ||
     { [[ $OSTYPE == linux* ]] && (( $+commands[systemd-detect-virt] )) && systemd-detect-virt --quiet; }; then
     _dotfiles_vm_without_tmux=1
 fi
-if [[ -o interactive && -z $TMUX && -t 1 && -z $NO_TMUX && -z $_dotfiles_vm_without_tmux && "$TERM_PROGRAM" != "vscode" ]] && (( $+commands[tmux] )); then
+if [[ $OSTYPE != darwin* && -o interactive && -z $TMUX && -t 1 &&
+      -z $NO_TMUX && -z $_dotfiles_vm_without_tmux && $TERM_PROGRAM != vscode ]] &&
+    (( $+commands[tmux] )); then
     () {
         local base=${TMUX_BASE_SESSION:-main} stale view base_created=0
         if ! tmux has-session -t "=$base" 2>/dev/null; then
