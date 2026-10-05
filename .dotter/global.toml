@@ -56,8 +56,8 @@ default_target_type = "symbolic"
 [claude.files]
 "home/.config/claude" = { target = "~/.config/claude", type = "symbolic", recurse = false }
 
-[tmux_macos.files]
-"home-macos/.config/tmux" = { target = "~/.config/tmux", type = "symbolic", recurse = false }
+[tmux.files]
+"home/.config/tmux" = { target = "~/.config/tmux", type = "symbolic", recurse = false }
 
 [karabiner.files]
 "home-macos/.config/karabiner" = { target = "~/.config/karabiner", type = "symbolic", recurse = false }
@@ -74,12 +74,6 @@ default_target_type = "symbolic"
 "home/.claude/skills/arc-pr-view" = { target = "~/.claude/skills/arc-pr-view", type = "symbolic", recurse = false }
 "home/.claude/skills/vm-cleanup" = { target = "~/.claude/skills/vm-cleanup", type = "symbolic", recurse = false }
 "home/.claude/skills/dotfiles" = { target = "~/.claude/skills/dotfiles", type = "symbolic", recurse = false }
-
-[tmux_linux.files]
-"home-linux/.config/tmux" = { target = "~/.config/tmux", type = "symbolic", recurse = false }
-
-[tmux_vm.files]
-"home-linux/.config/tmux-vm" = { target = "~/.config/tmux", type = "symbolic", recurse = false }
 
 [sway.files]
 "home-linux/.config/sway" = { target = "~/.config/sway", type = "symbolic", recurse = false }

@@ -10,6 +10,6 @@ packages = [
   "kitty",
   "vifm",
   "vlc",
-  "tmux_macos",
+  "tmux",
   "karabiner",
 ]

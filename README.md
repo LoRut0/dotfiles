@@ -30,10 +30,7 @@ deployment adds a small startup fallback to the existing Bash profile files
 instead; interactive Bash is then replaced by a Zsh login shell while
 non-interactive scripts stay in Bash.
 
-The VM profile also deploys a minimal tmux configuration with the `Ctrl+A` prefix
-and mouse support for scrolling pane history. Press `Ctrl+A` twice to send a
-literal `Ctrl+A` to the application. Apply it to an existing tmux server
-with `tmux source-file ~/.config/tmux/tmux.conf`. New servers load it automatically.
+All three machine profiles deploy the shared tmux configuration described below.
 
 Replace `linux-vm` with the desired profile. The wrapper downloads a pinned
 Dotter v0.13.5 executable for macOS ARM64 or Linux x86_64/ARM64 on first use,
@@ -70,6 +67,61 @@ The machine profiles also deploy the vendored Zsh plugins from
 recorded there. Until that link is deployed, `.zshrc` can use the previous
 `~/.zsh` copies. Syntax highlighting loads last, after other Zsh widgets and
 local overrides.
+
+## tmux
+
+The `mac`, `linux-desktop`, and `linux-vm` profiles all link `home/.config/tmux`
+to `~/.config/tmux`. This requires tmux 3.2+ and `/bin/zsh` and uses the same
+settings on every system:
+
+- `Ctrl+A` prefix; press it twice to send a literal `Ctrl+A` to the application.
+- `/bin/zsh` for new shells, mouse support, window/pane numbering from 1,
+  automatic window renumbering, and 50,000 lines of history for new panes.
+- Prefix then `h/j/k/l` to select panes; `|` and `-` to split in the current path.
+- Prefix then `r` to reload `~/.config/tmux/tmux.conf`.
+- `screen-256color`, the truecolor override, and a 10 ms Escape delay.
+
+Drag with the mouse to select text. Releasing the button freezes the selection
+and leaves copy mode open. Double-click selects a word, triple-click selects a
+line; neither copies nor closes the selection automatically.
+
+| Copy-mode key | Action |
+| --- | --- |
+| `y` | Copy and keep the selection visible |
+| `Enter` | Copy and exit copy mode |
+| `Esc` or `q` | Exit without copying |
+| `v` / `V` | Begin a selection / select a whole line |
+| `Ctrl+V` | Toggle rectangular selection |
+
+For keyboard selection, enter copy mode with prefix then `[`, navigate with
+`h/j/k/l`, start selection with `v`, then copy. Prefix then `]` pastes the latest
+tmux buffer; prefix then `=` opens the buffer chooser. `Cmd+C` belongs to the
+terminal emulator; use `y` or `Enter` for a tmux selection.
+
+The clipboard adapter uses `pbcopy` on macOS, `wl-copy` on Wayland, or
+`xclip`/`xsel` with the X11 clipboard. Install the matching Linux utility separately
+if needed. On headless hosts, tmux still keeps its own buffer and emits OSC 52
+to the attached terminal. OSC 52 reception is enabled for applications such as
+Neovim and nested tmux sessions, and a hook forwards received text to an available
+local desktop clipboard.
+
+Terminal.app does not itself support OSC 52. For copying from a VM into the Mac
+clipboard, use **Terminal.app → local tmux on Mac → SSH → tmux on VM**, with this
+configuration deployed on both hosts. The local tmux receives the remote copy
+and passes it to `pbcopy`. The `mac` profile already starts tmux from ordinary
+interactive terminals. A direct SSH connection from Terminal.app without that
+local tmux layer does not update the Mac clipboard through this mechanism.
+Other terminal emulators need OSC 52 clipboard writes enabled. See the
+[tmux clipboard documentation](https://github.com/tmux/tmux/wiki/Clipboard).
+
+In nested tmux, the first `Ctrl+A` reaches the outer server. To send a command
+to the inner server, press `Ctrl+A`, `Ctrl+A`, then the command key.
+
+After deploying the machine profile, run
+`tmux source-file ~/.config/tmux/tmux.conf` on each existing server; future servers
+load it automatically. This does not replace shells already running in panes or
+increase the history retained by existing panes on older tmux versions. The VM
+profile still leaves tmux startup manual.
 
 ## Neovim
 
