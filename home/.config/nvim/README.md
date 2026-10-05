@@ -28,6 +28,13 @@ or `Enter`, and while you open files. Press `/` again to edit the query.
 In the filter, `Esc` clears the query; a second `Esc` or `Enter` with an empty
 query returns to the unfiltered explorer.
 
+## Codex
+
+Install the Codex CLI on the machine running Neovim. `\ax` opens Codex in a
+Snacks terminal on the right; `\ab` adds the current file, and visual `\as`
+adds the selected line range. The same actions are available as `:Codex` and
+`:CodexHere`. Codex starts in Neovim's current working directory (`:pwd`).
+
 ## Surround shortcuts
 
 In both terminal Neovim and VS Code, type `\W` followed by a surrounding
