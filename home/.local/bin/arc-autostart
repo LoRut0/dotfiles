@@ -63,7 +63,9 @@ def main() -> int:
     args = parser.parse_args()
 
     home = Path.home()
-    path_entries = (str(home / ".local/bin"), "/usr/local/bin", "/opt/homebrew/bin", "/usr/bin", "/bin")
+    # Login-shell PATH is not inherited by systemd/launchd. The primary
+    # checkout provides ya even when no standalone launcher is installed.
+    path_entries = (str(home / ".local/bin"), str(home / "arcadia"), "/usr/local/bin", "/opt/homebrew/bin", "/usr/bin", "/bin")
     os.environ["PATH"] = os.pathsep.join(path_entries + tuple(filter(None, os.environ.get("PATH", "").split(os.pathsep))))
     for program in ("arc", "ya"):
         if shutil.which(program) is None:

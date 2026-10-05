@@ -203,7 +203,8 @@ or symbolic mount path. The primary macOS `~/arcadia` must already be
 registered.
 
 Each machine needs `arc`, `ya`, Python 3.7+, valid Arc credentials, and network
-access for the first mount.
+access for the first mount. The helper also searches `~/arcadia` for `ya`, so
+it works with the minimal PATH provided by systemd or launchd.
 
 Deploying `mac` also loads the LaunchAgent. To rerun an already loaded agent:
 
