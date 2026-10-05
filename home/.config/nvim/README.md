@@ -21,3 +21,8 @@ fragments match in order.
 Outside Arc checkouts, the usual Snacks search backends remain in use.
 
 The explorer opens at cwd with `\e` and at the project root with `\E`.
+Press `/` to filter it, then `Enter` to browse the results with `j`/`k`.
+The query remains active while you expand or collapse directories with `l`/`h`
+or `Enter`, and while you open files. Press `/` again to edit the query.
+In the filter, `Esc` clears the query; a second `Esc` or `Enter` with an empty
+query returns to the unfiltered explorer.
