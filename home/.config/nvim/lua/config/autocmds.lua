@@ -7,6 +7,16 @@
 -- Or remove existing autocmds by their group name (which is prefixed with `lazyvim_` for the defaults)
 -- e.g. vim.api.nvim_del_augroup_by_name("lazyvim_wrap_spell")
 
+if vim.fn.has("nvim-0.12") == 1 and not vim.g.vscode then
+  vim.api.nvim_create_user_command("LspRestart", function(opts)
+    local args = { "restart" }
+    if opts.args ~= "" then
+      args[#args + 1] = opts.args
+    end
+    vim.cmd({ cmd = "lsp", args = args })
+  end, { nargs = "?", desc = "Restart LSP clients" })
+end
+
 -- html, css, js, json, typescript, lua — 2 spaces
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "html", "css", "javascript", "json", "typescript", "lua" },

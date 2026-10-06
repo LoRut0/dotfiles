@@ -48,6 +48,10 @@ other files, including shared `docs/yaml/definitions.yaml` schema files,
 alongside the existing YAML language server. Use `Ctrl+O` to jump back after
 following a definition.
 
+In terminal Neovim, `:LspRestart` restarts the language servers attached to the
+current buffer; `:LspRestart yamlls` restarts a named client. It is an alias
+for Neovim 0.12's `:lsp restart` command.
+
 ## Changes
 
 `\gs` opens working changes; `\gB` shows committed changes on the current
