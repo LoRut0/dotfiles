@@ -84,3 +84,7 @@ The leader is `\` in both modes. VS Code mappings:
 After changing the configuration, run **Neovim: Restart Extension** in VS Code.
 Regular terminal Neovim retains its existing plugins, OSC52 mappings and
 Treesitter behavior.
+
+In VS Code, `gd` invokes VS Code's Go to Definition; the Neovim OpenAPI
+navigator stays disabled there. Install the 42Crunch OpenAPI Editor extension
+in VS Code to follow OpenAPI `$ref` values across YAML files.
