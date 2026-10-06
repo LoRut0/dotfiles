@@ -24,7 +24,7 @@ return {
     picker = {
       sources = {
         explorer = {
-          hidden = true,
+          hidden = false,
           ignored = {},
           -- Following an opened file would clear the active explorer search.
           follow_file = false,
