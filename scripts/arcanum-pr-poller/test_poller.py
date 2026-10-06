@@ -2,6 +2,7 @@ import copy
 import json
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
@@ -283,6 +284,49 @@ class ProbeSchemaTests(unittest.TestCase):
         client=object.__new__(p.Arcanum)
         client.get=lambda path,collection=False:[] if collection else {'id':12345678}
         with self.assertRaises(ValueError):client.probe('12345678')
+
+
+class StatusTests(unittest.TestCase):
+    def test_cli_json_compatibility_and_human_output_without_network_config(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            monitors = [{'pr_id': '12345678', 'interval_seconds': 900},
+                        {'pr_id': '12345679', 'interval_seconds': 600}]
+            stopped = {'stopped': True, 'last_checked_at': 1000,
+                       'next_poll_at': 2000, 'baseline': {'private': 'omit'}}
+            p.atomic_json(root/'config.json', {'monitors': monitors})
+            p.atomic_json(root/'12345678/poll-state.json', stopped)
+            command = [sys.executable, str(Path(p.__file__).resolve()),
+                       '--root', str(root), 'status']
+            before = {str(f): f.read_bytes() for f in root.rglob('*') if f.is_file()}
+            raw = subprocess.run(command, check=True, capture_output=True, text=True)
+            self.assertEqual([json.loads(line) for line in raw.stdout.splitlines()],
+                             [{'pr': '12345678', 'interval': 900, 'stopped': True,
+                               'last_checked_at': 1000, 'next_poll_at': 2000},
+                              {'pr': '12345679', 'interval': 600}])
+            human = subprocess.run(command + ['--human'], check=True, capture_output=True, text=True)
+            self.assertIn('Остановлен', human.stdout)
+            self.assertIn('Ожидает первого опроса', human.stdout)
+            self.assertIn('15 мин', human.stdout)
+            self.assertNotIn('baseline', human.stdout)
+            self.assertEqual(before, {str(f): f.read_bytes() for f in root.rglob('*') if f.is_file()})
+
+    def test_status_precedence_and_no_obsolete_scheduled_time(self):
+        monitors = [{'pr_id': str(pr), 'interval_seconds': 600} for pr in range(1, 5)]
+        states = [{'inflight': {'status': 'queued', 'event_id': 'event-one'}, 'next_poll_at': 10},
+                  {'inflight': {'status': 'uncertain', 'event_id': 'event-two'}},
+                  {'last_error': 'HTTPFailure', 'last_http_status': 429, 'retry_not_before': 5000},
+                  {'stopped': True, 'inflight': {'status': 'queued'}, 'next_poll_at': 10}]
+        output = p.human_status(monitors, states, now=1000)
+        self.assertIn('Ждёт завершения ревью', output)
+        self.assertIn('Доставка не подтверждена', output)
+        self.assertIn('Пауза перед повтором', output)
+        self.assertIn('HTTP 429', output)
+        self.assertIn('event-one', output)
+        stopped = next(line for line in output.splitlines() if line.startswith('4 '))
+        self.assertIn('Остановлен', stopped)
+        self.assertNotIn('после подтверждения', stopped)
+        self.assertEqual(p.human_status([], []), 'Нет зарегистрированных PR.')
 
 
 if __name__ == "__main__":

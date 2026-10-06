@@ -66,13 +66,17 @@ is deployed. In an existing shell, load it with:
 ```sh
 source ~/.config/zsh-ai/prpoll.zsh
 prpoll status
+prpoll status --human
 prpoll check --pr 12345678 --dry-run
 prpoll stop --pr 12345678
 prpoll resume --pr 12345678
 ```
 
 Replace the PR ID with your own. `check` without `--dry-run` can queue a model
-turn when it finds changes. The runtime requires Python 3.10+ and the locally
+turn when it finds changes. `status --human` displays a table with monitor
+states, intervals, local timestamps and errors; plain `status` keeps JSON output.
+Both read saved state only, without contacting Arcanum or checking scheduler health.
+The runtime requires Python 3.10+ and the locally
 installed Arcanum/SkillStore authentication helpers. The review skills also
 require `arcanum-review-pr`, `arcanum`, and `arc`, installed separately.
 

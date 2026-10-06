@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import re
 import random
+from datetime import datetime
 from email.utils import parsedate_to_datetime
 import signal
 import ssl
@@ -530,6 +531,57 @@ def acknowledge(root, pr, event_id, outcome='complete', stop=False):
         return 'acked'
 
 
+def human_status(monitors, states, now=None, blocked_until=0):
+    """Format saved monitor state; do not contact Arcanum or launch an agent."""
+    now = time.time() if now is None else now
+    zone = datetime.fromtimestamp(now).astimezone().strftime('%Z (%z)')
+    if not monitors:
+        return 'Нет зарегистрированных PR.'
+
+    def timestamp(value):
+        return '—' if value is None else datetime.fromtimestamp(value).astimezone().strftime('%d.%m %H:%M:%S')
+
+    rows = [('PR', 'Состояние', 'Интервал', 'Последний опрос', 'Следующий опрос')]
+    notes = []
+    for monitor, state in zip(monitors, states):
+        pr = monitor['pr_id']
+        inflight = state.get('inflight')
+        next_at = max(state.get('next_poll_at', 0), state.get('retry_not_before', 0), blocked_until)
+        next_label = timestamp(next_at) if next_at > now else 'при следующем тике'
+        if state.get('stopped') or not monitor.get('enabled', True):
+            status, next_label = 'Остановлен', '—'
+        elif inflight:
+            status = ('Ждёт завершения ревью' if inflight.get('status') == 'queued'
+                      else 'Доставка не подтверждена')
+            next_label = 'после подтверждения'
+            notes.append(f"PR {pr}: событие {inflight.get('event_id', '—')}")
+        elif max(state.get('retry_not_before', 0), blocked_until) > now:
+            status = 'Пауза перед повтором'
+        elif state.get('last_error'):
+            status = 'Ошибка опроса'
+        elif state.get('last_checked_at') is None:
+            status = 'Ожидает первого опроса'
+        else:
+            status = 'Ожидает опроса'
+        interval = monitor['interval_seconds']
+        interval_label = f'{interval // 60} мин' if interval % 60 == 0 else f'{interval} с'
+        rows.append((pr, status, interval_label, timestamp(state.get('last_checked_at')), next_label))
+        if state.get('last_error'):
+            error = state['last_error']
+            code = state.get('last_http_status')
+            if error == 'HTTPFailure' and code is not None:
+                error += f' (HTTP {code})'
+            notes.append(f'PR {pr}: последняя ошибка — {error}')
+
+    widths = [max(len(row[column]) for row in rows) for column in range(len(rows[0]))]
+    lines = [f'Сохранённое состояние мониторов. Время: {zone}.', '']
+    for row in rows:
+        lines.append('  '.join(value.ljust(width) for value, width in zip(row, widths)).rstrip())
+    if notes:
+        lines.extend(['', *notes])
+    return '\n'.join(lines)
+
+
 def main():
     os.umask(0o077)
     parser = argparse.ArgumentParser(description=__doc__)
@@ -554,7 +606,9 @@ def main():
     p.add_argument('--review-state', required=True)
     p.add_argument('--interval', required=True, type=int, choices=[600, 900])
     p.add_argument('--codex', default='/opt/homebrew/bin/codex')
-    sub.add_parser('status')
+    p = sub.add_parser('status')
+    p.add_argument('--human', action='store_true',
+                   help='Show a readable table with local times instead of JSON')
     args = parser.parse_args()
     config = read_json(args.root / 'config.json')
     config['_runtime_root'] = str(args.root)
@@ -592,6 +646,12 @@ def main():
             if args.command == 'resume':
                 state['next_poll_at'] = 0
             atomic_json(directory / 'poll-state.json', state)
+        return
+    if args.command == 'status' and args.human:
+        states = [read_json(args.root / monitor['pr_id'] / 'poll-state.json', {})
+                  for monitor in config['monitors']]
+        budget = read_json(args.root / 'http-budget.json', {})
+        print(human_status(config['monitors'], states, blocked_until=budget.get('blocked_until', 0)))
         return
     for monitor in config['monitors']:
         pr = monitor['pr_id']
