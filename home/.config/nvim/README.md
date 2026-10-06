@@ -48,6 +48,17 @@ other files, including shared `docs/yaml/definitions.yaml` schema files,
 alongside the existing YAML language server. Use `Ctrl+O` to jump back after
 following a definition.
 
+## Changes
+
+`\gs` opens working changes; `\gB` shows committed changes on the current
+branch. In Git, Diffview provides a changed-files panel and side-by-side diffs.
+The branch view compares with the default Git base branch; `:DiffviewClose`
+closes it. Arcadia compares the branch with its trunk merge base.
+In Arcadia, a Snacks picker lists files from `arc status` or `arc diff -B` for
+the current directory. Move with `j`/`k` to preview a diff, press `Enter` to
+open a file, and `r` to refresh the list. The Arcadia working view includes
+staged, unstaged, and untracked files.
+
 ## Surround shortcuts
 
 In both terminal Neovim and VS Code, type `\W` followed by a surrounding
