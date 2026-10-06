@@ -74,7 +74,9 @@ prpoll resume --pr 12345678
 
 Replace the PR ID with your own. `check` without `--dry-run` can queue a model
 turn when it finds changes. `status --human` displays a table with monitor
-states, intervals, local timestamps and errors; plain `status` keeps JSON output.
+states, PR titles, intervals, local timestamps and errors; plain `status` keeps JSON
+output with a `title` field. Titles are saved from normal full snapshots and updated
+when PR metadata changes, without extra API requests for the status command.
 Both read saved state only, without contacting Arcanum or checking scheduler health.
 The runtime requires Python 3.10+ and the locally
 installed Arcanum/SkillStore authentication helpers. The review skills also

@@ -42,6 +42,16 @@ class PollFixture(unittest.TestCase):
 
 
 class DeliveryTests(PollFixture):
+    def test_title_is_saved_and_renamed_with_metadata(self):
+        self.assertEqual(self.run_poll(self.original, now=0), 'unchanged')
+        self.assertEqual(self.state()['title'], 'Title')
+        renamed = copy.deepcopy(self.original)
+        renamed['metadata']['summary'] = 'Renamed PR'
+        self.assertEqual(self.run_poll(renamed, now=900), 'queued')
+        self.assertEqual(self.state()['title'], 'Renamed PR')
+        p.acknowledge(self.root, '12345678', self.sent[-1]['id'])
+        self.assertEqual(self.state()['title'], 'Renamed PR')
+
     def test_unchanged_never_invokes_model(self):
         for now in range(0, 3600, 900):
             self.assertEqual(self.run_poll(self.original, now=now), 'unchanged')
@@ -293,7 +303,7 @@ class StatusTests(unittest.TestCase):
             monitors = [{'pr_id': '12345678', 'interval_seconds': 900},
                         {'pr_id': '12345679', 'interval_seconds': 600}]
             stopped = {'stopped': True, 'last_checked_at': 1000,
-                       'next_poll_at': 2000, 'baseline': {'private': 'omit'}}
+                       'next_poll_at': 2000, 'baseline': {'metadata': {'summary': 'Saved PR'}}}
             p.atomic_json(root/'config.json', {'monitors': monitors})
             p.atomic_json(root/'12345678/poll-state.json', stopped)
             command = [sys.executable, str(Path(p.__file__).resolve()),
@@ -301,15 +311,23 @@ class StatusTests(unittest.TestCase):
             before = {str(f): f.read_bytes() for f in root.rglob('*') if f.is_file()}
             raw = subprocess.run(command, check=True, capture_output=True, text=True)
             self.assertEqual([json.loads(line) for line in raw.stdout.splitlines()],
-                             [{'pr': '12345678', 'interval': 900, 'stopped': True,
+                             [{'pr': '12345678', 'interval': 900, 'title': 'Saved PR', 'stopped': True,
                                'last_checked_at': 1000, 'next_poll_at': 2000},
-                              {'pr': '12345679', 'interval': 600}])
+                              {'pr': '12345679', 'interval': 600, 'title': None}])
             human = subprocess.run(command + ['--human'], check=True, capture_output=True, text=True)
             self.assertIn('Остановлен', human.stdout)
             self.assertIn('Ожидает первого опроса', human.stdout)
             self.assertIn('15 мин', human.stdout)
+            self.assertIn('Saved PR', human.stdout)
             self.assertNotIn('baseline', human.stdout)
             self.assertEqual(before, {str(f): f.read_bytes() for f in root.rglob('*') if f.is_file()})
+
+    def test_human_title_does_not_inject_lines_or_terminal_escapes(self):
+        state = {'title': 'Title\nwith\tspacing\x1b[31m'}
+        output = p.human_status([{'pr_id': '12345678', 'interval_seconds': 600}], [state])
+        self.assertNotIn('\x1b', output)
+        self.assertIn('Title with spacing[31m', output)
+        self.assertEqual(state['title'], 'Title\nwith\tspacing\x1b[31m')
 
     def test_status_precedence_and_no_obsolete_scheduled_time(self):
         monitors = [{'pr_id': str(pr), 'interval_seconds': 600} for pr in range(1, 5)]

@@ -461,6 +461,7 @@ def process(config, root, fetch, send=queue_event, now=None, force=False, dry_ru
             return 'fetch-error:' + type(exc).__name__
         state.update(last_checked_at=now, next_poll_at=now + config['interval_seconds'] + jitter,
                      consecutive_errors=0, last_full_fetch_at=now, last_poll_kind='full')
+        state['title'] = snapshot['metadata']['summary']
         if compact is not None:
             state['probe_signature'] = digest(compact)
         state.pop('last_error', None)
@@ -523,12 +524,18 @@ def acknowledge(root, pr, event_id, outcome='complete', stop=False):
         if event['pr_id'] != pr or digest(event['snapshot']) != event['snapshot_sha256']:
             raise ValueError('Event integrity mismatch')
         state['baseline'] = event['snapshot']
+        state['title'] = event['snapshot']['metadata']['summary']
         state['last_ack'] = {'event_id': event_id, 'at': time.time(), 'outcome': outcome}
         state.pop('inflight')
         if stop:
             state['stopped'] = True
         atomic_json(path, state)
         return 'acked'
+
+
+def saved_title(state):
+    """Older states already contain the title inside their full baseline."""
+    return state.get('title', state.get('baseline', {}).get('metadata', {}).get('summary'))
 
 
 def human_status(monitors, states, now=None, blocked_until=0):
@@ -541,7 +548,7 @@ def human_status(monitors, states, now=None, blocked_until=0):
     def timestamp(value):
         return '—' if value is None else datetime.fromtimestamp(value).astimezone().strftime('%d.%m %H:%M:%S')
 
-    rows = [('PR', 'Состояние', 'Интервал', 'Последний опрос', 'Следующий опрос')]
+    rows = [('PR', 'Состояние', 'Интервал', 'Последний опрос', 'Следующий опрос', 'Название')]
     notes = []
     for monitor, state in zip(monitors, states):
         pr = monitor['pr_id']
@@ -565,7 +572,11 @@ def human_status(monitors, states, now=None, blocked_until=0):
             status = 'Ожидает опроса'
         interval = monitor['interval_seconds']
         interval_label = f'{interval // 60} мин' if interval % 60 == 0 else f'{interval} с'
-        rows.append((pr, status, interval_label, timestamp(state.get('last_checked_at')), next_label))
+        # PR titles are remote text: keep terminal escapes and line breaks out
+        # of the table while retaining the original title in state/JSON.
+        title = saved_title(state) or '—'
+        title = ' '.join(''.join(char for char in title if char.isprintable() or char.isspace()).split())
+        rows.append((pr, status, interval_label, timestamp(state.get('last_checked_at')), next_label, title))
         if state.get('last_error'):
             error = state['last_error']
             code = state.get('last_http_status')
@@ -659,7 +670,7 @@ def main():
             continue
         if args.command == 'status':
             state = read_json(args.root / pr / 'poll-state.json', {})
-            print(json.dumps({'pr': pr, 'interval': monitor['interval_seconds'],
+            print(json.dumps({'pr': pr, 'interval': monitor['interval_seconds'], 'title': saved_title(state),
                               **{k:v for k,v in state.items() if k != 'baseline'}}, ensure_ascii=False))
             continue
         try:
