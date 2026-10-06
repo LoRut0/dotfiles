@@ -21,6 +21,11 @@ query instead of scanning the checkout. Type a path fragment; space-separated
 fragments match in order.
 Outside Arc checkouts, the usual Snacks search backends remain in use.
 
+When saving Python, C/C++, Go, YAML, or JSON files inside an Arc checkout,
+Neovim runs that checkout's `ya style` on the buffer before writing it. This
+uses the normal LazyVim autoformat toggle and keeps the edited file in sync
+with what is saved.
+
 The explorer opens at cwd with `\e` and at the project root with `\E`.
 Press `/` to filter it, then `Enter` to browse the results with `j`/`k`.
 The query remains active while you expand or collapse directories with `l`/`h`

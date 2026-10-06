@@ -32,3 +32,28 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.diagnostic.enable(false, { bufnr = args.buf })
   end,
 })
+
+if not vim.g.vscode then
+  local styled_filetypes = { python = true, c = true, cpp = true, go = true, yaml = true, json = true }
+  local arcadia = require("config.arcadia")
+
+  LazyVim.format.register({
+    name = "ya style",
+    priority = 200,
+    primary = true,
+    sources = function(buf)
+      local path = vim.api.nvim_buf_get_name(buf)
+      local root = vim.bo[buf].buftype == "" and path ~= "" and styled_filetypes[vim.bo[buf].filetype]
+        and arcadia.find_root(path)
+      return root and vim.fn.executable(root .. "/ya") == 1 and { "ya style" } or {}
+    end,
+    format = function(buf)
+      require("conform").format({
+        bufnr = buf,
+        formatters = { "ya_style" },
+        lsp_format = "never",
+        timeout_ms = 30000,
+      })
+    end,
+  })
+end
