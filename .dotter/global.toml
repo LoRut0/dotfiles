@@ -81,6 +81,14 @@ default_target_type = "symbolic"
 "home/.claude/skills/vm-cleanup" = { target = "~/.claude/skills/vm-cleanup", type = "symbolic", recurse = false }
 "home/.claude/skills/dotfiles" = { target = "~/.claude/skills/dotfiles", type = "symbolic", recurse = false }
 
+[prpoll.files]
+"home/.config/zsh-ai/prpoll.zsh" = "~/.config/zsh-ai/prpoll.zsh"
+"scripts/arcanum-pr-poller/poller.py" = "~/.local/share/arcanum-pr-poller/poller.py"
+
+[arcanum_review_skills.files]
+"home/.codex/skills/arcanum-auto-review" = { target = "~/.codex/skills/arcanum-auto-review", type = "symbolic", recurse = false }
+"home/.codex/skills/arcanum-review-watch" = { target = "~/.codex/skills/arcanum-review-watch", type = "symbolic", recurse = false }
+
 [sway.files]
 "home-linux/.config/sway" = { target = "~/.config/sway", type = "symbolic", recurse = false }
 

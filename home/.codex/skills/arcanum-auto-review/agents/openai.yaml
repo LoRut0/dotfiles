@@ -1,0 +1,4 @@
+interface:
+  display_name: "Arcanum Auto Review"
+  short_description: "Ревью PR, ответы /ask и контроль CI каждые 10 минут"
+  default_prompt: "Используй $arcanum-auto-review для автоматического ревью указанного PR каждые 10 минут."

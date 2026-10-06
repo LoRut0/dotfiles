@@ -1,0 +1,4 @@
+interface:
+  display_name: "Arcanum Review Watch"
+  short_description: "Ревью чужого PR и диалог по issues каждые 15 минут"
+  default_prompt: "Используй $arcanum-review-watch: следи за указанным чужим PR каждые 15 минут, проводи полноценное ревью и обрабатывай ответы на свои issues."

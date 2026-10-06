@@ -132,6 +132,9 @@ case "$OSTYPE" in
     linux*)  [[ -r $ZSH_PARTS/linux.zsh ]] && source "$ZSH_PARTS/linux.zsh" ;;
 esac
 
+# Optional commands from the independently deployed AI profile.
+[[ -r $HOME/.config/zsh-ai/prpoll.zsh ]] && source "$HOME/.config/zsh-ai/prpoll.zsh"
+
 # Per-machine overrides (not tracked in git)
 [[ -r $HOME/.zshrc.local ]] && source "$HOME/.zshrc.local"
 

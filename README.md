@@ -58,6 +58,37 @@ repository through Dotter and commit and push completed changes to GitHub.
 If the AI dry run reports existing regular files at those targets, reconcile
 them before deploying; Dotter does not replace them without `--force`.
 
+The AI profile also deploys the `prpoll` Zsh function, its Python runtime,
+and the Codex skills `arcanum-auto-review` and `arcanum-review-watch`.
+New shells load the function automatically when the shared Zsh configuration
+is deployed. In an existing shell, load it with:
+
+```sh
+source ~/.config/zsh-ai/prpoll.zsh
+prpoll status
+prpoll check --pr 12345678 --dry-run
+prpoll stop --pr 12345678
+prpoll resume --pr 12345678
+```
+
+Replace the PR ID with your own. `check` without `--dry-run` can queue a model
+turn when it finds changes. The runtime requires Python 3.10+ and the locally
+installed Arcanum/SkillStore authentication helpers. The review skills also
+require `arcanum-review-pr`, `arcanum`, and `arc`, installed separately.
+
+Only code and skill instructions belong in dotfiles. Monitor configuration,
+PR state, events, logs, credentials, and the machine-specific scheduler stay
+local under `~/.local/share/arcanum-pr-poller` and `~/Library/LaunchAgents`.
+Deploying the AI profile does not register PRs or start a scheduler on a new
+machine; use the review skill to set up monitoring after configuring its local
+runtime. Existing macOS LaunchAgents continue using the deployed runtime path.
+The AI deploy hook does not load or restart them.
+
+When adopting an existing installation, back up regular files/directories
+reported as conflicts and then deploy; do not force-replace monitor state.
+The runtime is linked as one file so neighboring local data stays intact.
+Run its tests with `python3 -B -m unittest discover -s scripts/arcanum-pr-poller`.
+
 Before migrating an existing installation, inspect Dotter's dry run and the
 existing links. The systemd timer in `sysd/` is a separate privileged
 installation.
