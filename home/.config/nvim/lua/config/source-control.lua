@@ -118,6 +118,64 @@ local function arc_preview(ctx, scope, branch)
   end
 end
 
+local function open_file(picker, item)
+  if not item then
+    return
+  end
+  if vim.fn.filereadable(item.file) == 0 then
+    return Snacks.notify.warn("File is absent from the working tree: " .. item.path)
+  end
+  picker:close()
+  vim.cmd.edit(vim.fn.fnameescape(item.file))
+end
+
+local function open_arc_diff(picker, item, scope)
+  if not item then
+    return
+  end
+  if vim.fn.filereadable(item.file) == 0 then
+    return Snacks.notify.warn("File is absent from the working tree: " .. item.path)
+  end
+
+  local root = arcadia.find_root(item.file)
+  if not root then
+    return Snacks.notify.error("Could not find the Arcadia root for " .. item.path)
+  end
+  local relative_path = item.file:sub(#root + 2)
+  local unstaged = item.status:sub(2, 2) ~= " " or item.status == "??"
+  local base = unstaged and "index" or "HEAD"
+  local content = ""
+  if item.status ~= "??" and not (base == "HEAD" and item.status:sub(1, 1) == "A") then
+    content = run({ "arc", "show", (base == "index" and ":" or "HEAD:") .. relative_path }, scope)
+    if content == nil then
+      return
+    end
+  end
+
+  picker:close()
+  vim.cmd.tabnew()
+  local left_win = vim.api.nvim_get_current_win()
+  local left_buf = vim.api.nvim_create_buf(false, true)
+  local baseline = vim.split(content, "\n", { plain = true })
+  if content:sub(-1) == "\n" then
+    table.remove(baseline)
+  end
+  vim.api.nvim_buf_set_lines(left_buf, 0, -1, false, #baseline > 0 and baseline or { "" })
+  vim.api.nvim_buf_set_name(left_buf, ("[Arc %s %d] %s"):format(base, left_buf, item.path))
+  vim.bo[left_buf].buftype = "nofile"
+  vim.bo[left_buf].bufhidden = "wipe"
+  vim.bo[left_buf].swapfile = false
+  vim.bo[left_buf].endofline = content:sub(-1) == "\n"
+  vim.bo[left_buf].filetype = vim.filetype.match({ filename = item.file }) or ""
+  vim.bo[left_buf].modifiable = false
+  vim.bo[left_buf].readonly = true
+  vim.api.nvim_win_set_buf(left_win, left_buf)
+
+  vim.cmd("rightbelow vsplit")
+  vim.cmd.edit(vim.fn.fnameescape(item.file))
+  vim.cmd("windo diffthis")
+end
+
 local function open_arc(scope, branch)
   return Snacks.picker({
     title = branch and "Arcadia branch changes" or "Arcadia working changes",
@@ -137,17 +195,14 @@ local function open_arc(scope, branch)
       refresh_arc = function(picker)
         picker:find()
       end,
+      open_arc_file = open_file,
     },
-    win = { list = { keys = { r = "refresh_arc" } } },
+    win = { list = { keys = { r = "refresh_arc", o = "open_arc_file" } } },
     confirm = function(picker, item)
-      if not item then
-        return
+      if branch then
+        return open_file(picker, item)
       end
-      if vim.fn.filereadable(item.file) == 0 then
-        return Snacks.notify.warn("File is absent from the working tree: " .. item.path)
-      end
-      picker:close()
-      vim.cmd.edit(vim.fn.fnameescape(item.file))
+      return open_arc_diff(picker, item, scope)
     end,
   })
 end

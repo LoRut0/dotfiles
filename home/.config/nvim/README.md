@@ -51,13 +51,17 @@ following a definition.
 ## Changes
 
 `\gs` opens working changes; `\gB` shows committed changes on the current
-branch. In Git, Diffview provides a changed-files panel and side-by-side diffs.
+branch. In Git, Diffview provides a changed-files panel and side-by-side diffs;
+the working file on the right is editable and can be saved normally.
 The branch view compares with the default Git base branch; `:DiffviewClose`
 closes it. Arcadia compares the branch with its trunk merge base.
 In Arcadia, a Snacks picker lists files from `arc status` or `arc diff -B` for
-the current directory. Move with `j`/`k` to preview a diff, press `Enter` to
-open a file, and `r` to refresh the list. The Arcadia working view includes
-staged, unstaged, and untracked files.
+the current directory. Move with `j`/`k` to preview a diff. In the working view,
+`Enter` opens an editable side-by-side diff against the Arc index for unstaged
+files (`HEAD` for staged-only files); edit and save the file on the right.
+Untracked files use an empty left side. Press `o` to open a file normally,
+`r` to refresh the list, and `:tabclose` to leave the diff. The Arcadia working
+view includes staged, unstaged, and untracked files.
 
 ## Surround shortcuts
 
