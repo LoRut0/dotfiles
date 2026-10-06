@@ -44,8 +44,9 @@ adds the selected line range. The same actions are available as `:Codex` and
 
 OpenAPI YAML and JSON files support `gd` on a `$ref` value. The OpenAPI
 navigator follows both local `#/components/...` pointers and relative links to
-other files, alongside the existing YAML language server. Use `Ctrl+O` to jump
-back after following a definition.
+other files, including shared `docs/yaml/definitions.yaml` schema files,
+alongside the existing YAML language server. Use `Ctrl+O` to jump back after
+following a definition.
 
 ## Surround shortcuts
 
