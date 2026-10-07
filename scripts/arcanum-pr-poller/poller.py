@@ -28,6 +28,13 @@ DEFAULT_ROOT = Path.home() / '.local/share/arcanum-pr-poller'
 API = 'https://arcanum.yandex.net/api'
 CHECK_KEYS = ('system', 'type', 'required', 'status', 'description', 'system_check_id',
               'system_check_uri', 'restartable', 'run_id', 'attempt')
+STOP_REASONS = {
+    'author_ship': 'ship автора',
+    'merged': 'PR влит',
+    'closed': 'PR закрыт',
+    'user_request': 'по команде пользователя',
+    'unknown': 'причина не сохранена',
+}
 
 
 def read_json(path, default=None):
@@ -403,7 +410,8 @@ def prompt_for(config, event, root):
             "ожидание согласия не должно удерживать inflight или создавать повторные вызовы модели. "
             "После прохода сохрани state ревью, затем обязательно подтверди обработку командой "
             f"{sys.executable} {script} --root {root} ack --pr {config['pr_id']} "
-            f"--event {event['id']}. Если мониторинг надо закончить, добавь --stop. "
+            f"--event {event['id']}. Если мониторинг надо закончить, добавь --stop "
+            "и --reason author_ship, merged, closed или user_request по фактической причине. "
             "При невозможности закончить проход добавь --outcome blocked: повторного "
             "запуска на том же состоянии не будет, незавершённая работа остаётся в state. "
             "Не меняй снимок события. Не обновляй baseline свежим снимком за пределами "
@@ -469,6 +477,7 @@ def process(config, root, fetch, send=queue_event, now=None, force=False, dry_ru
         state.update(last_checked_at=now, next_poll_at=now + config['interval_seconds'] + jitter,
                      consecutive_errors=0, last_full_fetch_at=now, last_poll_kind='full')
         state['title'] = snapshot['metadata']['summary']
+        state['author'] = snapshot['metadata']['author']
         if compact is not None:
             state['probe_signature'] = digest(compact)
         state.pop('last_error', None)
@@ -516,7 +525,9 @@ def process(config, root, fetch, send=queue_event, now=None, force=False, dry_ru
         return state['inflight']['status']
 
 
-def acknowledge(root, pr, event_id, outcome='complete', stop=False):
+def acknowledge(root, pr, event_id, outcome='complete', stop=False, reason=None):
+    if reason is not None and (not stop or reason not in STOP_REASONS):
+        raise ValueError('A valid stop reason requires --stop')
     directory = root / pr
     with lock(directory / 'poll.lock') as acquired:
         if not acquired:
@@ -532,10 +543,13 @@ def acknowledge(root, pr, event_id, outcome='complete', stop=False):
             raise ValueError('Event integrity mismatch')
         state['baseline'] = event['snapshot']
         state['title'] = event['snapshot']['metadata']['summary']
+        state['author'] = event['snapshot']['metadata']['author']
         state['last_ack'] = {'event_id': event_id, 'at': time.time(), 'outcome': outcome}
         state.pop('inflight')
         if stop:
             state['stopped'] = True
+            state['stop_reason'] = reason or 'unknown'
+            state['stopped_at'] = time.time()
         atomic_json(path, state)
         return 'acked'
 
@@ -543,6 +557,44 @@ def acknowledge(root, pr, event_id, outcome='complete', stop=False):
 def saved_title(state):
     """Older states already contain the title inside their full baseline."""
     return state.get('title', state.get('baseline', {}).get('metadata', {}).get('summary'))
+
+
+def saved_author(state):
+    return state.get('author') or state.get('baseline', {}).get('metadata', {}).get('author')
+
+
+def load_status_state(root, monitor):
+    """Read local identity and legacy stop evidence without guessing from PR state."""
+    state = read_json(root / monitor['pr_id'] / 'poll-state.json', {})
+    state['author'] = saved_author(state)
+    if state.get('stopped') and state.get('stop_reason') is None:
+        state['stop_reason'] = 'unknown'
+        path = monitor.get('review_state')
+        try:
+            review = read_json(path, {}) if path else {}
+        except (OSError, ValueError):
+            review = {}
+        terminal = review.get('terminal', {}) if isinstance(review, dict) else {}
+        if isinstance(terminal, dict):
+            reason = terminal.get('reason')
+            stop_event = terminal.get('event_id')
+            ack_event = state.get('last_ack', {}).get('event_id')
+            # A record from a previous run must not explain a later stop.
+            matching_event = stop_event is not None and stop_event == ack_event
+            if matching_event and reason in STOP_REASONS:
+                state['stop_reason'] = reason
+    return state
+
+
+def single_line(value):
+    return ' '.join(''.join(char for char in str(value)
+                            if char.isprintable() or char.isspace()).split())
+
+
+def author_label(author):
+    if isinstance(author, dict):
+        author = author.get('login') or author.get('name') or author.get('uid') or author.get('id')
+    return single_line(author) if author is not None else '—'
 
 
 def human_status(monitors, states, now=None, blocked_until=0):
@@ -555,7 +607,7 @@ def human_status(monitors, states, now=None, blocked_until=0):
     def timestamp(value):
         return '—' if value is None else datetime.fromtimestamp(value).astimezone().strftime('%d.%m %H:%M:%S')
 
-    rows = [('PR', 'Состояние', 'Интервал', 'Последний опрос', 'Следующий опрос', 'Название')]
+    rows = [('PR', 'Автор', 'Состояние', 'Интервал', 'Последний опрос', 'Следующий опрос', 'Название')]
     notes = []
     for monitor, state in zip(monitors, states):
         pr = monitor['pr_id']
@@ -563,7 +615,10 @@ def human_status(monitors, states, now=None, blocked_until=0):
         next_at = max(state.get('next_poll_at', 0), state.get('retry_not_before', 0), blocked_until)
         next_label = timestamp(next_at) if next_at > now else 'при следующем тике'
         if state.get('stopped') or not monitor.get('enabled', True):
-            status, next_label = 'Остановлен', '—'
+            reason = STOP_REASONS.get(state.get('stop_reason'), STOP_REASONS['unknown'])
+            if not state.get('stopped'):
+                reason = 'отключён в конфигурации'
+            status, next_label = f'Остановлен ({reason})', '—'
         elif inflight:
             status = ('Ждёт завершения ревью' if inflight.get('status') == 'queued'
                       else 'Доставка не подтверждена')
@@ -582,8 +637,9 @@ def human_status(monitors, states, now=None, blocked_until=0):
         # PR titles are remote text: keep terminal escapes and line breaks out
         # of the table while retaining the original title in state/JSON.
         title = saved_title(state) or '—'
-        title = ' '.join(''.join(char for char in title if char.isprintable() or char.isspace()).split())
-        rows.append((pr, status, interval_label, timestamp(state.get('last_checked_at')), next_label, title))
+        title = single_line(title)
+        rows.append((pr, author_label(saved_author(state)), status, interval_label,
+                     timestamp(state.get('last_checked_at')), next_label, title))
         if state.get('last_error'):
             error = state['last_error']
             code = state.get('last_http_status')
@@ -614,9 +670,13 @@ def main():
     p.add_argument('--event', required=True)
     p.add_argument('--outcome', choices=['complete', 'blocked'], default='complete')
     p.add_argument('--stop', action='store_true')
+    p.add_argument('--reason', choices=STOP_REASONS, help='Reason for stopping (requires --stop)')
     for name in ('stop', 'resume'):
         p = sub.add_parser(name)
         p.add_argument('--pr', required=True)
+        if name == 'stop':
+            p.add_argument('--reason', choices=STOP_REASONS, default='user_request',
+                           help='Stop reason (default: user_request)')
     p = sub.add_parser('register')
     p.add_argument('--pr', required=True)
     p.add_argument('--thread', required=True)
@@ -628,6 +688,8 @@ def main():
     p.add_argument('--human', action='store_true',
                    help='Show a readable table with local times instead of JSON')
     args = parser.parse_args()
+    if args.command == 'ack' and args.reason is not None and not args.stop:
+        parser.error('--reason requires --stop for ack')
     config = read_json(args.root / 'config.json')
     config['_runtime_root'] = str(args.root)
     if args.command == 'register':
@@ -652,7 +714,7 @@ def main():
         print('registered')
         return
     if args.command == 'ack':
-        print(acknowledge(args.root, args.pr, args.event, args.outcome, args.stop))
+        print(acknowledge(args.root, args.pr, args.event, args.outcome, args.stop, args.reason))
         return
     if args.command in ('stop', 'resume'):
         directory = args.root / args.pr
@@ -663,10 +725,15 @@ def main():
             state['stopped'] = args.command == 'stop'
             if args.command == 'resume':
                 state['next_poll_at'] = 0
+                state.pop('stop_reason', None)
+                state.pop('stopped_at', None)
+            else:
+                state['stop_reason'] = args.reason
+                state['stopped_at'] = time.time()
             atomic_json(directory / 'poll-state.json', state)
         return
     if args.command == 'status' and args.human:
-        states = [read_json(args.root / monitor['pr_id'] / 'poll-state.json', {})
+        states = [load_status_state(args.root, monitor)
                   for monitor in config['monitors']]
         budget = read_json(args.root / 'http-budget.json', {})
         print(human_status(config['monitors'], states, blocked_until=budget.get('blocked_until', 0)))
@@ -676,7 +743,7 @@ def main():
         if getattr(args, 'pr', None) and args.pr != pr:
             continue
         if args.command == 'status':
-            state = read_json(args.root / pr / 'poll-state.json', {})
+            state = load_status_state(args.root, monitor)
             print(json.dumps({'pr': pr, 'interval': monitor['interval_seconds'], 'title': saved_title(state),
                               **{k:v for k,v in state.items() if k != 'baseline'}}, ensure_ascii=False))
             continue

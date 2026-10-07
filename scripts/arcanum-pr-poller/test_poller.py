@@ -45,6 +45,7 @@ class DeliveryTests(PollFixture):
     def test_title_is_saved_and_renamed_with_metadata(self):
         self.assertEqual(self.run_poll(self.original, now=0), 'unchanged')
         self.assertEqual(self.state()['title'], 'Title')
+        self.assertEqual(self.state()['author'], {'name': 'author'})
         renamed = copy.deepcopy(self.original)
         renamed['metadata']['summary'] = 'Renamed PR'
         self.assertEqual(self.run_poll(renamed, now=900), 'queued')
@@ -312,8 +313,9 @@ class StatusTests(unittest.TestCase):
             raw = subprocess.run(command, check=True, capture_output=True, text=True)
             self.assertEqual([json.loads(line) for line in raw.stdout.splitlines()],
                              [{'pr': '12345678', 'interval': 900, 'title': 'Saved PR', 'stopped': True,
+                               'author': None, 'stop_reason': 'unknown',
                                'last_checked_at': 1000, 'next_poll_at': 2000},
-                              {'pr': '12345679', 'interval': 600, 'title': None}])
+                              {'pr': '12345679', 'interval': 600, 'title': None, 'author': None}])
             human = subprocess.run(command + ['--human'], check=True, capture_output=True, text=True)
             self.assertIn('Остановлен', human.stdout)
             self.assertIn('Ожидает первого опроса', human.stdout)
@@ -345,6 +347,71 @@ class StatusTests(unittest.TestCase):
         self.assertIn('Остановлен', stopped)
         self.assertNotIn('после подтверждения', stopped)
         self.assertEqual(p.human_status([], []), 'Нет зарегистрированных PR.')
+
+    def test_author_and_stop_reason_display(self):
+        monitors = [{'pr_id': str(i), 'interval_seconds': 600} for i in range(1, 4)]
+        states = [{'stopped': True, 'stop_reason': 'author_ship', 'author': {'name': 'alice'}},
+                  {'stopped': True, 'stop_reason': 'merged', 'author': {'uid': 123456}},
+                  {'stopped': True}]
+        output = p.human_status(monitors, states)
+        self.assertIn('Автор', output)
+        self.assertIn('alice', output)
+        self.assertIn('123456', output)
+        self.assertIn('Остановлен (ship автора)', output)
+        self.assertIn('Остановлен (PR влит)', output)
+        self.assertIn('Остановлен (причина не сохранена)', output)
+        self.assertEqual(p.author_label({'login': 'login', 'name': 'Name', 'uid': 1}), 'login')
+
+    def test_legacy_stop_requires_matching_event_and_preserves_explicit_reason(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            review = root/'review.json'
+            monitor = {'pr_id': '12345678', 'review_state': str(review)}
+            state_path = root/'12345678/poll-state.json'
+            state = {'stopped': True, 'last_ack': {'event_id': 'current'},
+                     'baseline': {'metadata': {'author': {'name': 'alice'}}}}
+            p.atomic_json(state_path, state)
+            p.atomic_json(review, {'terminal': {'reason': 'author_ship', 'event_id': 'current'}})
+            loaded = p.load_status_state(root, monitor)
+            self.assertEqual(loaded['stop_reason'], 'author_ship')
+            self.assertEqual(loaded['author'], {'name': 'alice'})
+            self.assertEqual(p.read_json(state_path), state)  # status remains read-only
+            p.atomic_json(review, {'terminal': {'reason': 'author_ship', 'event_id': 'old'}})
+            self.assertEqual(p.load_status_state(root, monitor)['stop_reason'], 'unknown')
+            state['stop_reason'] = 'user_request'
+            p.atomic_json(state_path, state)
+            self.assertEqual(p.load_status_state(root, monitor)['stop_reason'], 'user_request')
+
+    def test_stop_cli_saves_reason_and_resume_clears_it(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            p.atomic_json(root/'config.json', {'monitors': []})
+            command = [sys.executable, str(Path(p.__file__).resolve()), '--root', str(root)]
+            subprocess.run(command + ['stop', '--pr', '12345678', '--reason', 'author_ship'],
+                           check=True, capture_output=True)
+            state_path = root/'12345678/poll-state.json'
+            self.assertEqual(p.read_json(state_path)['stop_reason'], 'author_ship')
+            subprocess.run(command + ['resume', '--pr', '12345678'], check=True, capture_output=True)
+            self.assertFalse(p.read_json(state_path)['stopped'])
+            self.assertNotIn('stop_reason', p.read_json(state_path))
+            subprocess.run(command + ['stop', '--pr', '12345678'], check=True, capture_output=True)
+            self.assertEqual(p.read_json(state_path)['stop_reason'], 'user_request')
+
+
+class StopAckTests(PollFixture):
+    def test_stop_ack_saves_reason_and_author_once(self):
+        changed = copy.deepcopy(self.original)
+        changed['metadata']['status'] = 'merged'
+        self.run_poll(changed, now=0)
+        event = self.sent[-1]['id']
+        p.acknowledge(self.root, '12345678', event, stop=True, reason='merged')
+        self.assertEqual(self.state()['stop_reason'], 'merged')
+        self.assertEqual(self.state()['author'], {'name': 'author'})
+        self.assertTrue(self.state()['stopped'])
+        self.assertEqual(p.acknowledge(self.root, '12345678', event, stop=True, reason='merged'),
+                         'already-acked')
+        with self.assertRaises(ValueError):
+            p.acknowledge(self.root, '12345678', event, reason='merged')
 
 
 if __name__ == "__main__":

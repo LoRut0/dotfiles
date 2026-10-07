@@ -77,10 +77,17 @@ prpoll resume --pr 12345678
 
 Replace the PR ID with your own. `check` without `--dry-run` can queue a model
 turn when it finds changes. `status --human` displays a table with monitor
-states, PR titles, intervals, local timestamps and errors; plain `status` keeps JSON
-output with a `title` field. Titles are saved from normal full snapshots and updated
+states with stop reasons, PR authors, titles, intervals, local timestamps and errors.
+Authors are shown by login/name, or UID when no login is available. Plain `status`
+keeps JSON output with `title`, `author`, and the saved `stop_reason` for stopped PRs.
+Titles and authors are saved from normal full snapshots and updated
 when PR metadata changes, without extra API requests for the status command.
 Both read saved state only, without contacting Arcanum or checking scheduler health.
+`stop --pr <ID>` records `user_request`; use `--reason author_ship`, `merged`, or
+`closed` for a verified automatic stop. `ack --stop` accepts the same `--reason`.
+For older records, status uses a matching terminal event from the local review
+state; if evidence is missing, it displays “причина не сохранена”. `resume` clears
+the previous stop reason.
 The runtime requires Python 3.10+ and the locally
 installed Arcanum/SkillStore authentication helpers. The review skills also
 require `arcanum-review-pr`, `arcanum`, and `arc`, installed separately.

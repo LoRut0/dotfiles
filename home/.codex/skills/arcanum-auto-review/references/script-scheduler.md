@@ -41,9 +41,13 @@ python3 ~/.local/share/arcanum-pr-poller/poller.py register \
 ## Диагностика и остановка
 
 - `poller.py status` показывает интервалы, last_checked, ошибки и inflight event.
+  `status --human` дополнительно выводит авторов и причины остановки из локального state.
 - `poller.py check --pr <ID> --dry-run` читает PR и показывает, нужна ли доставка,
   не отправляя сообщение модели и не меняя baseline.
-- `poller.py stop --pr <ID>` прекращает опрос этого PR. Другие мониторы продолжают работать.
+- `poller.py stop --pr <ID>` прекращает опрос этого PR и сохраняет `user_request`.
+  При автоматической остановке передавай `--reason author_ship`, `--reason merged`
+  или `--reason closed` по фактической причине. `ack --stop` принимает тот же `--reason`.
+  Сохраняй причину и event ID также в terminal-записи state ревью. Другие мониторы продолжают работу.
 - `poller.py resume --pr <ID>` возобновляет только по прямой просьбе пользователя;
   baseline сохраняется, поэтому учитываются изменения за время остановки.
 - Лог launchd: `~/.local/share/arcanum-pr-poller/launchd.log`.
