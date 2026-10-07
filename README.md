@@ -60,6 +60,9 @@ them before deploying; Dotter does not replace them without `--force`.
 
 The AI profile also deploys the `prpoll` Zsh function, its Python runtime,
 and the Codex skills `arcanum-auto-review` and `arcanum-review-watch`.
+Both create outgoing issues, comments and replies as Arcanum drafts. Publication
+requires explicit approval of the prepared draft IDs/text; issue status changes
+also require approval. Pending approval does not keep the poller's event in flight.
 New shells load the function automatically when the shared Zsh configuration
 is deployed. In an existing shell, load it with:
 
