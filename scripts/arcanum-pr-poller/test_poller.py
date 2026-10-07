@@ -301,8 +301,10 @@ class StatusTests(unittest.TestCase):
     def test_cli_json_compatibility_and_human_output_without_network_config(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            monitors = [{'pr_id': '12345678', 'interval_seconds': 900},
-                        {'pr_id': '12345679', 'interval_seconds': 600}]
+            monitors = [{'pr_id': '12345678', 'interval_seconds': 900,
+                         'skill_path': '/skills/arcanum-pr-agent-helper/SKILL.md'},
+                        {'pr_id': '12345679', 'interval_seconds': 600,
+                         'skill_path': '/skills/arcanum-auto-review/SKILL.md'}]
             stopped = {'stopped': True, 'last_checked_at': 1000,
                        'next_poll_at': 2000, 'baseline': {'metadata': {'summary': 'Saved PR'}}}
             p.atomic_json(root/'config.json', {'monitors': monitors})
@@ -314,15 +316,29 @@ class StatusTests(unittest.TestCase):
             self.assertEqual([json.loads(line) for line in raw.stdout.splitlines()],
                              [{'pr': '12345678', 'interval': 900, 'title': 'Saved PR', 'stopped': True,
                                'author': None, 'stop_reason': 'unknown',
-                               'last_checked_at': 1000, 'next_poll_at': 2000},
-                              {'pr': '12345679', 'interval': 600, 'title': None, 'author': None}])
+                               'last_checked_at': 1000, 'next_poll_at': 2000,
+                               'skill': 'arcanum-pr-agent-helper', 'mode': 'PR agent helper'},
+                              {'pr': '12345679', 'interval': 600, 'title': None, 'author': None,
+                               'skill': 'arcanum-auto-review', 'mode': 'Auto review'}])
             human = subprocess.run(command + ['--human'], check=True, capture_output=True, text=True)
             self.assertIn('Остановлен', human.stdout)
             self.assertIn('Ожидает первого опроса', human.stdout)
             self.assertIn('15 мин', human.stdout)
             self.assertIn('Saved PR', human.stdout)
+            self.assertIn('PR agent helper', human.stdout)
+            self.assertIn('Auto review', human.stdout)
             self.assertNotIn('baseline', human.stdout)
             self.assertEqual(before, {str(f): f.read_bytes() for f in root.rglob('*') if f.is_file()})
+
+    def test_mode_uses_current_skill_path_not_interval_or_legacy_state(self):
+        helper = {'skill_path': '/skills/arcanum-pr-agent-helper/SKILL.md',
+                  'interval_seconds': 900, 'review_state': '/old/arcanum-auto-review/state.json'}
+        review = {'skill_path': '/skills/arcanum-auto-review/SKILL.md',
+                  'interval_seconds': 600, 'review_state': '/old/arcanum-review-watch/state.json'}
+        self.assertEqual(p.monitor_mode(helper), 'PR agent helper')
+        self.assertEqual(p.monitor_mode(review), 'Auto review')
+        self.assertIsNone(p.monitor_mode({}))
+        self.assertEqual(p.monitor_mode({'skill_path': '/skills/custom/SKILL.md'}), 'custom')
 
     def test_human_title_does_not_inject_lines_or_terminal_escapes(self):
         state = {'title': 'Title\nwith\tspacing\x1b[31m'}

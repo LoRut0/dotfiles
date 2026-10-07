@@ -1,4 +1,4 @@
 interface:
-  display_name: "Arcanum Auto Review"
-  short_description: "Черновики ревью, ответы /ask и контроль CI — 10 минут"
-  default_prompt: "Используй $arcanum-auto-review для автоматического ревью указанного PR каждые 10 минут; все issues и ответы сохраняй как drafts до моего подтверждения."
+  display_name: "Auto Review"
+  short_description: "Черновики ревью чужого PR и ответов — каждые 15 минут"
+  default_prompt: "Используй $arcanum-auto-review: следи за указанным чужим PR каждые 15 минут, проводи полноценное ревью и обрабатывай ответы на свои issues; все исходящие сообщения сохраняй как drafts до моего подтверждения."

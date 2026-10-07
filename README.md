@@ -59,7 +59,9 @@ If the AI dry run reports existing regular files at those targets, reconcile
 them before deploying; Dotter does not replace them without `--force`.
 
 The AI profile also deploys the `prpoll` Zsh function, its Python runtime,
-and the Codex skills `arcanum-auto-review` and `arcanum-review-watch`.
+and the Codex skills `arcanum-pr-agent-helper` (**PR agent helper**, 10-minute
+polling with small authorized fixes) and `arcanum-auto-review` (**Auto review**,
+15-minute polling for reviewing another author's PR without code changes).
 Both create outgoing issues, comments and replies as Arcanum drafts. Publication
 requires explicit approval of the prepared draft IDs/text; issue status changes
 also require approval. Pending approval does not keep the poller's event in flight.
@@ -77,9 +79,11 @@ prpoll resume --pr 12345678
 
 Replace the PR ID with your own. `check` without `--dry-run` can queue a model
 turn when it finds changes. `status --human` displays a table with monitor
-states with stop reasons, PR authors, titles, intervals, local timestamps and errors.
+states with stop reasons, PR authors, skill modes, titles, intervals, local timestamps and errors.
 Authors are shown by login/name, or UID when no login is available. Plain `status`
-keeps JSON output with `title`, `author`, and the saved `stop_reason` for stopped PRs.
+keeps JSON output with `title`, `author`, the skill slug in `skill`, its display
+label in `mode`, and the saved `stop_reason` for stopped PRs. Mode is derived from
+`skill_path`, not the polling interval or legacy state directory names.
 Titles and authors are saved from normal full snapshots and updated
 when PR metadata changes, without extra API requests for the status command.
 Both read saved state only, without contacting Arcanum or checking scheduler health.

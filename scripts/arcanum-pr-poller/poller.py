@@ -26,6 +26,10 @@ import uuid
 
 DEFAULT_ROOT = Path.home() / '.local/share/arcanum-pr-poller'
 API = 'https://arcanum.yandex.net/api'
+SKILL_MODES = {
+    'arcanum-pr-agent-helper': 'PR agent helper',
+    'arcanum-auto-review': 'Auto review',
+}
 CHECK_KEYS = ('system', 'type', 'required', 'status', 'description', 'system_check_id',
               'system_check_uri', 'restartable', 'run_id', 'attempt')
 STOP_REASONS = {
@@ -597,6 +601,16 @@ def author_label(author):
     return single_line(author) if author is not None else '—'
 
 
+def monitor_skill(monitor):
+    path = monitor.get('skill_path')
+    return Path(path).parent.name if path else None
+
+
+def monitor_mode(monitor):
+    skill = monitor_skill(monitor)
+    return SKILL_MODES.get(skill, skill)
+
+
 def human_status(monitors, states, now=None, blocked_until=0):
     """Format saved monitor state; do not contact Arcanum or launch an agent."""
     now = time.time() if now is None else now
@@ -607,7 +621,7 @@ def human_status(monitors, states, now=None, blocked_until=0):
     def timestamp(value):
         return '—' if value is None else datetime.fromtimestamp(value).astimezone().strftime('%d.%m %H:%M:%S')
 
-    rows = [('PR', 'Автор', 'Состояние', 'Интервал', 'Последний опрос', 'Следующий опрос', 'Название')]
+    rows = [('PR', 'Автор', 'Режим', 'Состояние', 'Интервал', 'Последний опрос', 'Следующий опрос', 'Название')]
     notes = []
     for monitor, state in zip(monitors, states):
         pr = monitor['pr_id']
@@ -638,7 +652,8 @@ def human_status(monitors, states, now=None, blocked_until=0):
         # of the table while retaining the original title in state/JSON.
         title = saved_title(state) or '—'
         title = single_line(title)
-        rows.append((pr, author_label(saved_author(state)), status, interval_label,
+        rows.append((pr, author_label(saved_author(state)), single_line(monitor_mode(monitor) or '—'),
+                     status, interval_label,
                      timestamp(state.get('last_checked_at')), next_label, title))
         if state.get('last_error'):
             error = state['last_error']
@@ -745,7 +760,8 @@ def main():
         if args.command == 'status':
             state = load_status_state(args.root, monitor)
             print(json.dumps({'pr': pr, 'interval': monitor['interval_seconds'], 'title': saved_title(state),
-                              **{k:v for k,v in state.items() if k != 'baseline'}}, ensure_ascii=False))
+                              **{k:v for k,v in state.items() if k != 'baseline'},
+                              'skill': monitor_skill(monitor), 'mode': monitor_mode(monitor)}, ensure_ascii=False))
             continue
         try:
             # Lazy auth: not-due/stopped jobs never authenticate or call any API.

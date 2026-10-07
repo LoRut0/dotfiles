@@ -1,0 +1,4 @@
+interface:
+  display_name: "PR Agent Helper"
+  short_description: "Черновики ревью, ответы /ask и контроль CI — 10 минут"
+  default_prompt: "Используй $arcanum-pr-agent-helper для автоматического ревью указанного PR каждые 10 минут; все issues и ответы сохраняй как drafts до моего подтверждения."

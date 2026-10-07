@@ -86,8 +86,8 @@ default_target_type = "symbolic"
 "scripts/arcanum-pr-poller/poller.py" = "~/.local/share/arcanum-pr-poller/poller.py"
 
 [arcanum_review_skills.files]
+"home/.codex/skills/arcanum-pr-agent-helper" = { target = "~/.codex/skills/arcanum-pr-agent-helper", type = "symbolic", recurse = false }
 "home/.codex/skills/arcanum-auto-review" = { target = "~/.codex/skills/arcanum-auto-review", type = "symbolic", recurse = false }
-"home/.codex/skills/arcanum-review-watch" = { target = "~/.codex/skills/arcanum-review-watch", type = "symbolic", recurse = false }
 
 [sway.files]
 "home-linux/.config/sway" = { target = "~/.config/sway", type = "symbolic", recurse = false }

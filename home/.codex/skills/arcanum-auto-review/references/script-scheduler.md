@@ -11,7 +11,7 @@ LaunchAgent: `com.lorut0.arcanum-pr-poller`, файл в `~/Library/LaunchAgents
 runtime и LaunchAgent, проверь пути. Не подменяй отсутствующий runtime heartbeat.
 
 launchd запускает `poller.py tick` каждую минуту; скрипт опрашивает только PR, для
-которых истёк индивидуальный интервал (10 минут в этом режиме). Между событиями
+которых истёк индивидуальный интервал (15 минут в этом режиме). Между событиями
 модель не вызывается. Нужны пользовательская сессия macOS, работающий локальный
 Codex app-server, сеть/VPN и штатная авторизация Arcanum. После сна пропущенные
 интервалы не воспроизводятся пачкой: проверяется последнее состояние.
@@ -30,7 +30,7 @@ Codex app-server, сеть/VPN и штатная авторизация Arcanum.
 python3 ~/.local/share/arcanum-pr-poller/poller.py register \
   --pr <PR_ID> --thread <EXISTING_CHAT_UUID> \
   --skill ~/.codex/skills/arcanum-auto-review/SKILL.md \
-  --review-state <ABSOLUTE_STATE_JSON> --interval 600
+  --review-state <ABSOLUTE_STATE_JSON> --interval 900
 ```
 
 Уточняй синтаксис через `--help`; перед исполнением замени все placeholders.
