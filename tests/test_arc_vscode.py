@@ -43,7 +43,7 @@ class ArcVscodeTest(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.base = Path(self.temp.name)
+        self.base = Path(self.temp.name).resolve()
         self.root = self.make_checkout(self.base / "checkout with spaces")
         self.a = self.make_folder(self.root / "services/first")
         self.b = self.make_folder(self.root / "services/second")
@@ -145,6 +145,28 @@ class ArcVscodeTest(unittest.TestCase):
         self.assertFalse((self.a / "compile_commands.json").exists())
         self.assertFalse(list((self.base / "cache").rglob("targets")))
         self.assertEqual(self.combined_path().read_bytes(), previous)
+
+    def test_init_without_refresh_preserves_databases_and_does_not_build(self):
+        self.write_database(self.a, [self.entry(self.a / "old.cpp", "-DOLD")])
+        self.init(self.a)
+        combined = self.combined_path()
+        previous = combined.read_bytes()
+        source = (self.a / "compile_commands.json").read_bytes()
+        other_workspace = self.base / "no-refresh.code-workspace"
+        self.run_helper("init", self.root, self.a, self.b, "--output", other_workspace,
+                        "--clangd", "/usr/bin/true", "--no-refresh")
+        config = json.loads(other_workspace.read_text())
+        self.assertEqual(config["settings"]["yandex.arcRoot"], str(self.root))
+        self.assertIn("no-refresh", config["settings"]["window.title"])
+        self.assertEqual(combined.read_bytes(), previous)
+        self.assertEqual((self.a / "compile_commands.json").read_bytes(), source)
+        self.assertFalse((self.b / "compile_commands.json").exists())
+        self.assertFalse((self.base / "calls").exists())
+        fresh_cache = self.base / "unused-cache"
+        self.env["XDG_CACHE_HOME"] = str(fresh_cache)
+        self.run_helper("init", self.root, self.a, "--output", self.base / "fresh.code-workspace",
+                        "--clangd", "/usr/bin/true", "--no-refresh")
+        self.assertFalse(fresh_cache.exists())
 
     def test_standalone_rejects_invalid_targets_and_options_before_build(self):
         no_make = self.a / "src"

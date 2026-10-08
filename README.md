@@ -338,13 +338,23 @@ arc-vscode init ~/arcadia-wt/first \
   taxi/uservices/services/grocery-api
 ```
 
-Open `/codenv/workspace/arcadia-first.code-workspace` with **File → Open
-Workspace from File** in the VS Code window connected to the VM. For the main
-checkout, `arc-vscode init ~/arcadia ...` creates `arcadia.code-workspace`.
-An existing workspace is never overwritten. New workspaces default to
-`/codenv/workspace` when that directory exists, otherwise
-`$XDG_DATA_HOME/arc-vscode` (normally `~/.local/share/arc-vscode`). Use `--output`
-to choose a different location.
+Open `~/workspaces/first.code-workspace` with **File → Open Workspace from File**
+on the machine containing that checkout. For the main checkout,
+`arc-vscode init ~/arcadia ...` creates `~/workspaces/main.code-workspace`.
+Other worktrees use their directory name, such as `second.code-workspace`.
+An existing workspace is never overwritten. Use `--output` to choose a different
+location; existing workspace files and task definitions keep working.
+
+To create only the workspace without creating or updating any compilation
+database, add `--no-refresh`:
+
+```sh
+arc-vscode init ~/arcadia-wt/first \
+  taxi/uservices/services/grocery-api --no-refresh
+```
+
+Workspace creation never builds a service. Without `--no-refresh`, it also
+combines any databases already present in the selected folders.
 
 To work in another service in that checkout:
 
@@ -373,12 +383,12 @@ To generate and refresh the workspace from a terminal:
 
 ```sh
 arc-vscode prepare ~/arcadia-wt/first/taxi/uservices/services/grocery-goals \
-  --workspace /codenv/workspace/arcadia-first.code-workspace
+  --workspace ~/workspaces/first.code-workspace
 ```
 
 `prepare` accepts the same `--jobs`, `--ya-arg` and `--dry-run` options.
 After running standalone `arc-compdb`, use **Arcadia: Refresh workspace databases**
-or `arc-vscode refresh /codenv/workspace/arcadia-first.code-workspace` if you also
+or `arc-vscode refresh ~/workspaces/first.code-workspace` if you also
 want to update VS Code's combined database.
 
 VS Code reads a combined database in that checkout's cache, built from the

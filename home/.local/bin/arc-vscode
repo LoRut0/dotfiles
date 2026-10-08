@@ -145,25 +145,9 @@ def process_task(label, args, cwd):
     }
 
 
-def create_workspace(args):
-    root = checkout_for(args.checkout)
-    folders = [folder_in_checkout(value, root) for value in args.folders]
-    if len(set(folders)) != len(folders):
-        raise ValueError("The same folder was supplied more than once")
-    name = "arcadia-" + root.name if root.parent.name == "arcadia-wt" else root.name
-    data_home = Path(os.environ.get("XDG_DATA_HOME", str(Path.home() / ".local/share")))
-    workspace_dir = Path("/codenv/workspace")
-    if not workspace_dir.is_dir():
-        workspace_dir = data_home / "arc-vscode"
-    workspace = Path(args.output).expanduser().absolute() if args.output else workspace_dir / (name + ".code-workspace")
-    if workspace.exists():
-        raise ValueError("Workspace already exists; use Add Folder to Workspace: {}".format(workspace))
-    clangd = args.clangd or subprocess.check_output(
-        [str(root / "ya"), "tool", "clangd", "--print-path"], cwd=root, text=True
-    ).strip()
-    if not Path(clangd).is_file() or not os.access(clangd, os.X_OK):
-        raise ValueError("clangd is not executable: {}".format(clangd))
-    subprocess.run([clangd, "--version"], check=True, stdout=subprocess.DEVNULL)
+def workspace_config(root, folders, workspace, clangd):
+    """Build settings without reading a checkout or updating its databases."""
+    name = workspace.stem
     common = ["--workspace", str(workspace)]
     current = process_task(
         "Arcadia: Generate compilation database (current folder)",
@@ -171,7 +155,7 @@ def create_workspace(args):
         root,
     )
     current["group"] = {"kind": "build", "isDefault": True}
-    config = {
+    return {
         "folders": [{"name": p.name, "path": str(p)} for p in folders],
         "settings": {
             "yandex.arcRoot": str(root),
@@ -219,8 +203,27 @@ def create_workspace(args):
             }],
         },
     }
-    atomic_json(workspace, config)
-    refresh(workspace)
+
+
+def create_workspace(args):
+    root = checkout_for(args.checkout)
+    folders = [folder_in_checkout(value, root) for value in args.folders]
+    if len(set(folders)) != len(folders):
+        raise ValueError("The same folder was supplied more than once")
+    name = "main" if root == Path.home() / "arcadia" else root.name
+    workspace = (Path(args.output).expanduser().absolute() if args.output
+                 else Path.home() / "workspaces" / (name + ".code-workspace"))
+    if workspace.exists():
+        raise ValueError("Workspace already exists; use Add Folder to Workspace: {}".format(workspace))
+    clangd = args.clangd or subprocess.check_output(
+        [str(root / "ya"), "tool", "clangd", "--print-path"], cwd=root, text=True
+    ).strip()
+    if not Path(clangd).is_file() or not os.access(clangd, os.X_OK):
+        raise ValueError("clangd is not executable: {}".format(clangd))
+    subprocess.run([clangd, "--version"], check=True, stdout=subprocess.DEVNULL)
+    atomic_json(workspace, workspace_config(root, folders, workspace, clangd))
+    if not args.no_refresh:
+        refresh(workspace)
     print("Open in VS Code: {}".format(workspace))
 
 
@@ -265,6 +268,7 @@ def main():
     init.add_argument("folders", nargs="*", help="folders relative to the checkout, or absolute paths")
     init.add_argument("--output", help="workspace file location")
     init.add_argument("--clangd", help="clangd executable (default: ya tool clangd)")
+    init.add_argument("--no-refresh", action="store_true", help="create only the workspace; leave compilation databases unchanged")
     gen = sub.add_parser("prepare", help="generate headers and a compilation database for one folder")
     gen.add_argument("folder")
     gen.add_argument("--workspace", help="also refresh this workspace's combined database")
