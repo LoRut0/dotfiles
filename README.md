@@ -157,8 +157,11 @@ to the attached terminal. OSC 52 reception is enabled for applications such as
 Neovim and nested tmux sessions, and a hook forwards received text to an available
 local desktop clipboard.
 
-On Mac and Linux desktop, ordinary interactive terminals automatically attach
-to tmux. The VM profile leaves startup manual. Set `NO_TMUX=1` for a new terminal
+On Mac and Linux desktop, each ordinary interactive terminal automatically creates
+an independent tmux session with its own windows and panes. Closing the terminal
+leaves its session and running processes in the background. Press `Ctrl+A`, then
+`s` in another terminal to select a saved session; prefix then `$` renames it.
+The VM profile leaves startup manual. Set `NO_TMUX=1` for a new terminal
 to skip the local tmux, for example when you want **terminal on Mac → SSH → tmux
 on VM** with a single tmux layer. See the Alacritty command below.
 
@@ -193,8 +196,11 @@ Alacritty separately using the DMG from the
 moving `Alacritty.app` to `~/Applications` or `/Applications`, then apply the
 `mac` profile.
 
-A normal Alacritty window starts the local tmux automatically. To open an SSH
-window without a local tmux, run this on Mac and then connect to the VM from it:
+A normal Alacritty window starts a new local tmux session automatically.
+The Karabiner Fn layer opens Alacritty with `Fn+Q`; `Fn+Shift+Q` opens it without
+tmux (either Shift key works). These use the existing modifier rotation, where
+physical Left Option becomes Fn. To open an SSH window without a local tmux
+from a command, run this on Mac and then connect to the VM from it:
 
 ```sh
 open -na Alacritty --args -o 'env.NO_TMUX="1"'

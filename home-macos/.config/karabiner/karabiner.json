@@ -77,6 +77,17 @@
                                 },
                                 "to": [{ "shell_command": "/usr/bin/open -n -a '/Users/lorut0/Applications/Alacritty.app'" }],
                                 "type": "basic"
+                            },
+                            {
+                                "from": {
+                                    "key_code": "q",
+                                    "modifiers": {
+                                        "mandatory": ["fn", "shift"],
+                                        "optional": ["caps_lock"]
+                                    }
+                                },
+                                "to": [{ "shell_command": "/usr/bin/open -n -a '/Users/lorut0/Applications/Alacritty.app' --args -o 'env.NO_TMUX=\"1\"'" }],
+                                "type": "basic"
                             }
                         ]
                     },
