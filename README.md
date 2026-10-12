@@ -128,6 +128,7 @@ settings on every system:
 - `Ctrl+A` prefix; press it twice to send a literal `Ctrl+A` to the application.
 - `/bin/zsh` for new shells, mouse support, window/pane numbering from 1,
   automatic window renumbering, and 50,000 lines of history for new panes.
+- Prefix then `c` opens a new window in the active pane's current directory.
 - Prefix then `h/j/k/l` to select panes; `%` or `|` split side by side, and
   `"` or `-` split top and bottom, all in the active pane's current directory.
 - Prefix then `r` to reload `~/.config/tmux/tmux.conf`.
