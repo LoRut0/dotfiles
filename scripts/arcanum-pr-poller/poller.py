@@ -314,6 +314,9 @@ class Arcanum:
                 raise ValueError('Incomplete compact check')
         published = []
         for comment in comments:
+            # Drafts may omit thread_updated_at and do not trigger review events.
+            if comment.get('is_draft') is True:
+                continue
             if not all(k in comment for k in ('id', 'is_draft', 'updated_at', 'thread_updated_at')):
                 raise ValueError('Incomplete compact comment')
             if not comment['is_draft']:
