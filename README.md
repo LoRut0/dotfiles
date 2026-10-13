@@ -426,6 +426,15 @@ Workspaces, build outputs, and compilation databases are machine-local; dotfiles
 stores the helper and its tests. Run the tests with
 `python3 -B -m unittest discover -s tests -v`.
 
+## Finder icon grid on macOS
+
+Deploying the `mac` profile enables Snap to Grid on the desktop and as the
+default for Finder icon view. Icons snap into rows and columns while you can
+still choose their positions. The deployment preserves icon sizes and other
+Finder view options, then restarts Finder if a setting changed. Folders with
+their own saved view options may need Snap to Grid selected separately in
+**View → Show View Options**.
+
 ## Terminal on macOS
 
 New Terminal shells register an exit hook before attaching to tmux. When the

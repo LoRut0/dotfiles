@@ -85,6 +85,7 @@ fi
 
 cd "$dotfiles_dir"
 export DOTFILES_PROFILE="$profile"
+export DOTFILES_DIR="$dotfiles_dir"
 exec "$dotter_bin" \
     "${dotter_options[@]}" \
     "$@"

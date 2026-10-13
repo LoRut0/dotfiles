@@ -3,6 +3,7 @@ set -euo pipefail
 
 case "${DOTFILES_PROFILE:-}" in
     mac)
+        bash "$DOTFILES_DIR/scripts/macos/finder-grid.sh"
         yazi_ya=/opt/homebrew/bin/ya
         if [[ -L "$yazi_ya" && "$(readlink "$yazi_ya")" == ../Cellar/yazi/*/bin/ya ]]; then
             rm "$yazi_ya"
