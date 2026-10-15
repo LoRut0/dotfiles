@@ -73,6 +73,19 @@ ID/показанного набора и версии текста. Прежн�
   вычисляй от найденного `SKILL.md`, а не от CWD. Не копируй policy gate.
 - Не меняй текущий checkout пользователя. Работай в отдельном Arc mount/worktree,
   созданном для этого монитора, с проверенной веткой и upstream именно данного PR.
+- Для временного mount, используемого только при инспекции, вызови установленный
+  `/usr/local/libexec/codex-arc-pr-mount mount <8-значный PR ID>`. Сохрани
+  возвращённые `mount` и `token`; после проверки вызови
+  `/usr/local/libexec/codex-arc-pr-mount unmount <PR ID> <token>`. Исходник в
+  [scripts/arc_pr_mount.py](scripts/arc_pr_mount.py) — не цель для постоянного
+  разрешения Codex: он доступен агенту на запись. Если защищённой копии нет,
+  используй обычный `arc mount` с отдельным подтверждением. Для правок кода,
+  commit и push используй отдельный `arc-wt` с lease; временный review mount
+  для них не предназначен. Если helper отказывает в удалении из-за изменений
+  или несовпадения remote head, сохрани mount и разбери причину, не обходи проверку.
+  Установка защищённой копии и правила описана в
+  [scripts/install_arc_pr_mount.sh](scripts/install_arc_pr_mount.sh); не запускай
+  установку автоматически при обычном ревью.
 - Не approve/merge, не меняй описание, labels, статус PR или настройки CI;
   не запускай deploy, не публикуй чужие drafts, не закрывай issues автоматически.
   Не делай force-push, rebase чужих коммитов и destructive cleanup.

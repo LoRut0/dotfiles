@@ -96,6 +96,15 @@ The runtime requires Python 3.10+ and the locally
 installed Arcanum/SkillStore authentication helpers. The review skills also
 require `arcanum-review-pr`, `arcanum`, and `arc`, installed separately.
 
+For temporary PR inspection mounts without repeated Codex prompts, run
+`sh home/.codex/skills/arcanum-pr-agent-helper/scripts/install_arc_pr_mount.sh`
+from this repository on macOS. It asks for administrator authentication once,
+installs root-owned copies of the restricted helper and the current stable Arc
+binary in `/usr/local/libexec`, and adds an allow rule for that helper only.
+Run it again after intentionally updating the helper or the stable Arc binary;
+restart Codex after installing the rule. The skill source under `home/` remains
+editable and must never be the target of a persistent allow rule.
+
 Only code and skill instructions belong in dotfiles. Monitor configuration,
 PR state, events, logs, credentials, and the machine-specific scheduler stay
 local under `~/.local/share/arcanum-pr-poller` and `~/Library/LaunchAgents`.
