@@ -48,7 +48,7 @@ case "${DOTFILES_PROFILE:-}" in
         fi
 
         systemctl --user daemon-reload
-        for slot in first second third fourth; do
+        for slot in first second third fourth review; do
             systemctl --user enable --now "arc-autostart@$slot.service"
         done
         ;;

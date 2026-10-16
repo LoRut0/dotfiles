@@ -260,8 +260,8 @@ Subsequent deployments manage their links independently.
 ## Arc mounts at startup
 
 The `mac` profile includes a LaunchAgent that restores `~/arcadia` and
-`~/arcadia-wt/{first,second,third,fourth}` at login. The
-`linux-vm` profile includes a user systemd service template for the four
+`~/arcadia-wt/{first,second,third,fourth,review}` at login. The
+`linux-vm` profile includes a user systemd service template for the five
 worktrees, without the primary `~/arcadia` mount. The shared helper reads
 `arc mount --list --json` and skips mounted paths. On first use, it creates
 missing worktree slots as new branches from `trunk` with a shared object store
@@ -280,7 +280,7 @@ Deploying `mac` also loads the LaunchAgent. To rerun an already loaded agent:
 launchctl kickstart "gui/$(id -u)/com.lorut0.arc-autostart"
 ```
 
-Deploying `linux-vm` enables all four user service instances. To start the
+Deploying `linux-vm` enables all five user service instances. To start the
 user manager at boot, before the first login, enable lingering once on the VM:
 
 ```sh

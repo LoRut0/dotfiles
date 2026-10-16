@@ -14,7 +14,7 @@ from datetime import datetime
 from pathlib import Path
 
 
-SLOTS = ("first", "second", "third", "fourth")
+SLOTS = ("first", "second", "third", "fourth", "review")
 RETRY_SECONDS = 15
 MAX_SECONDS = 600
 COMMAND_TIMEOUT = 90
