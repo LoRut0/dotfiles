@@ -263,16 +263,19 @@ The `mac` profile includes a LaunchAgent that restores `~/arcadia` and
 `~/arcadia-wt/{first,second,third,fourth,review}` at login. The
 `linux-vm` profile includes a user systemd service template for the five
 worktrees, without the primary `~/arcadia` mount. The shared helper reads
-`arc mount --list --json` and skips mounted paths. On first use, it creates
-missing worktree slots as new branches from `trunk` with a shared object store
-and no lifecycle hooks. Later starts remount the registered worktrees. It
+`arc mount --list --json` and skips mounted paths. On first use, it attempts
+to create missing worktree slots as new branches from `trunk` with a shared
+object store and no lifecycle hooks. Later starts remount the registered
+worktrees. On macOS, it mounts `~/arcadia` first, then restores registered
+slots with `arc mount`, without running `ya` from the Arc filesystem. It
 retries failures for up to ten minutes and refuses to overwrite a non-empty
 or symbolic mount path. The primary macOS `~/arcadia` must already be
 registered.
 
-Each machine needs `arc`, `ya`, Python 3.7+, valid Arc credentials, and network
-access for the first mount. The helper also searches `~/arcadia` for `ya`, so
-it works with the minimal PATH provided by systemd or launchd.
+Each machine needs `arc`, Python 3.7+, valid Arc credentials, and network
+access for the first mount. Creating a missing slot and restoring slots on
+Linux also require `ya`. The helper searches `~/arcadia` for `ya`, so it works
+with the minimal PATH provided by systemd or launchd.
 
 Deploying `mac` also loads the LaunchAgent. To rerun an already loaded agent:
 

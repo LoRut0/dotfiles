@@ -67,7 +67,8 @@ def main() -> int:
     # checkout provides ya even when no standalone launcher is installed.
     path_entries = (str(home / ".local/bin"), str(home / "arcadia"), "/usr/local/bin", "/opt/homebrew/bin", "/usr/bin", "/bin")
     os.environ["PATH"] = os.pathsep.join(path_entries + tuple(filter(None, os.environ.get("PATH", "").split(os.pathsep))))
-    for program in ("arc", "ya"):
+    required_programs = ("arc", "ya") if args.platform == "linux-vm" else ("arc",)
+    for program in required_programs:
         if shutil.which(program) is None:
             log(f"Missing required command: {program}")
             return 1
@@ -104,6 +105,10 @@ def main() -> int:
                     log(f"Cannot create worktree at non-empty or symbolic path: {path}")
                     blocked.add(name)
                     continue
+                if shutil.which("ya") is None:
+                    log(f"Waiting for ya before creating {path}")
+                    pending.append(name)
+                    continue
                 log(f"Creating {path} from trunk with a shared object store")
                 result = run(
                     ["ya", "tool", "arc-wt", "add", name, "--base", "trunk", "--mode", "mount-shared", "--no-hooks"],
@@ -124,7 +129,7 @@ def main() -> int:
                 pending.append(name)
                 continue
 
-            command = ["arc", "mount", str(path)] if name == "arcadia" else ["ya", "tool", "arc-wt", "remount", name]
+            command = ["arc", "mount", str(path)] if args.platform == "mac" else ["ya", "tool", "arc-wt", "remount", name]
             log(f"Restoring {path}")
             result = run(command, timeout=min(COMMAND_TIMEOUT, max(1, deadline - time.monotonic())))
             if result.returncode:
