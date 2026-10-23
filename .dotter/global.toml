@@ -75,6 +75,7 @@ default_target_type = "symbolic"
 "home/.agents/skills/arc-pr-view" = { target = "~/.agents/skills/arc-pr-view", type = "symbolic", recurse = false }
 "home/.agents/skills/vm-cleanup" = { target = "~/.agents/skills/vm-cleanup", type = "symbolic", recurse = false }
 "home/.agents/skills/dotfiles" = { target = "~/.agents/skills/dotfiles", type = "symbolic", recurse = false }
+"home/.agents/skills/mpei-test-assistant" = { target = "~/.agents/skills/mpei-test-assistant", type = "symbolic", recurse = false }
 
 [claude_skills.files]
 "home/.claude/skills/arc-pr-view" = { target = "~/.claude/skills/arc-pr-view", type = "symbolic", recurse = false }
