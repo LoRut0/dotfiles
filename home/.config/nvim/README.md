@@ -3,6 +3,9 @@
 A starter template for [LazyVim](https://github.com/LazyVim/LazyVim).
 Refer to the [documentation](https://lazyvim.github.io/installation) to get started.
 
+Markdown and MDX buffers show their source markup, including code fences and
+inline delimiters. Markdown rendering and syntax concealment are disabled.
+
 ## Search
 
 The leader key is `\`. `\sg` searches the current working directory;

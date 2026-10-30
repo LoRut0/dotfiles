@@ -36,8 +36,10 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 vim.api.nvim_create_autocmd("FileType", {
-  pattern = "markdown",
+  pattern = { "markdown", "markdown.mdx" },
   callback = function(args)
+    -- Keep Markdown delimiters visible instead of concealing them.
+    vim.opt_local.conceallevel = 0
     vim.opt_local.spell = false
     vim.diagnostic.enable(false, { bufnr = args.buf })
   end,
