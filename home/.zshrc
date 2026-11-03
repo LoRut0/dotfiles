@@ -109,6 +109,18 @@ case "$OSTYPE" in
     linux*)  [[ -r $ZSH_PARTS/linux.zsh ]] && source "$ZSH_PARTS/linux.zsh" ;;
 esac
 
+# Load fzf after vi-mode initializes so its key bindings are preserved.
+_dotfiles_fzf_init() {
+    if command -v fzf >/dev/null 2>&1; then
+        source <(fzf --zsh)
+    fi
+}
+if (( $+functions[zvm_init] )) && [[ ${ZVM_INIT_DONE:-false} != true ]]; then
+    zvm_after_init_commands+=(_dotfiles_fzf_init)
+else
+    _dotfiles_fzf_init
+fi
+
 # Optional commands from the independently deployed AI profile.
 [[ -r $HOME/.config/zsh-ai/prpoll.zsh ]] && source "$HOME/.config/zsh-ai/prpoll.zsh"
 

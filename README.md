@@ -129,6 +129,12 @@ recorded there. Until that link is deployed, `.zshrc` can use the previous
 `~/.zsh` copies. Syntax highlighting loads last, after other Zsh widgets and
 local overrides.
 
+The shared Zsh configuration enables fzf shell integration when fzf 0.48.0+
+is installed: `Ctrl+R` searches command history, `Ctrl+T` inserts selected paths,
+`Alt+C` changes directory, and `**` followed by Tab opens fuzzy completion.
+It loads after vi-mode initializes to preserve these key bindings. Open a new
+shell after updating the configuration.
+
 ## tmux
 
 The `mac`, `linux-desktop`, and `linux-vm` profiles all link `home/.config/tmux`
