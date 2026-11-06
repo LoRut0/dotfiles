@@ -7,6 +7,9 @@ if vim.g.vscode then
   return
 end
 
+vim.keymap.set("n", "gb", "<C-o>", { desc = "Go Back" })
+vim.keymap.set("n", "gB", "<C-i>", { desc = "Go Forward" })
+
 -- Make <Esc> exit terminal mode and return to Normal mode
 vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { desc = "Exit terminal mode" })
 vim.keymap.set("n", "<leader>y", require("osc52").copy_operator, { expr = true })
