@@ -81,6 +81,9 @@ Existing mini.surround shortcuts (`gsa`, `gsd`, `gsr`, etc.) are preserved.
 
 ## VS Code
 
+See the [navigation cheat sheet in Russian](VSCODE-CHEATSHEET.md) for
+definitions, references, incoming calls, search, and movement shortcuts.
+
 The same configuration supports `asvetliakov.vscode-neovim`. The installed
 LazyVim automatically imports its VS Code extra when `vim.g.vscode` is set.
 That extra filters out LSP, completion, formatter, debugger and UI plugins;
