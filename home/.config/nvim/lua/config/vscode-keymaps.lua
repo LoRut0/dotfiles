@@ -29,3 +29,7 @@ action({ "n", "x" }, "<leader>ca", "editor.action.quickFix", "Code Action")
 action("n", "<leader>cr", "editor.action.rename", "Rename")
 action("n", "<leader>cf", "editor.action.formatDocument", "Format Document")
 action("x", "<leader>cf", "editor.action.formatSelection", "Format Selection")
+
+action("n", "<leader>ax", "chatgpt.openSidebar", "Open Codex")
+action("n", "<leader>ab", "chatgpt.addFileToThread", "Add current file to Codex")
+action("x", "<leader>as", "chatgpt.addToThread", "Add selection range to Codex")

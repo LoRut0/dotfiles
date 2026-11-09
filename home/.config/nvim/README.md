@@ -38,10 +38,16 @@ query returns to the unfiltered explorer.
 
 ## Codex
 
-Install the Codex CLI on the machine running Neovim. `\ax` opens Codex in a
-Snacks terminal on the right; `\ab` adds the current file, and visual `\as`
-adds the selected line range. The same actions are available as `:Codex` and
-`:CodexHere`. Codex starts in Neovim's current working directory (`:pwd`).
+In terminal Neovim, install the Codex CLI on the machine running Neovim.
+`\ax` opens Codex in a Snacks terminal on the right; `\ab` adds the current
+file, and visual `\as` adds the selected line range. The same actions are
+available as `:Codex` and `:CodexHere`. Codex starts in Neovim's current
+working directory (`:pwd`).
+
+In VS Code, the same shortcuts use the Codex extension (`openai.chatgpt`).
+`\ax` opens its sidebar, `\ab` adds the current file to the chat, and visual
+`\as` adds the selected line range. Select code with `v` or `V` and type
+`\as` without leaving Visual mode.
 
 ## OpenAPI
 
@@ -106,6 +112,9 @@ The leader is `\` in both modes. VS Code mappings:
 | `\ca` | Code action |
 | `\cr` | Rename |
 | `\cf` | Format document, or selection in visual mode |
+| `\ax` | Open Codex sidebar |
+| `\ab` | Add current file to Codex |
+| visual `\as` | Add selected line range to Codex |
 
 After changing the configuration, run **Neovim: Restart Extension** in VS Code.
 Regular terminal Neovim retains its existing plugins, OSC52 mappings and
