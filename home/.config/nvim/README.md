@@ -109,12 +109,21 @@ The leader is `\` in both modes. VS Code mappings:
 | `\ff` | Find files |
 | `\sg` | Search in files |
 | `\e` | Focus Explorer |
+| `\bd` | Close current editor tab |
+| `\br` / `\bl` | Close tabs to the right / left in the current editor group |
+| `\bo` | Close other tabs in the current editor group |
+| `\bi` | Close inactive tabs across all groups, keeping each group's visible tab |
 | `\ca` | Code action |
 | `\cr` | Rename |
 | `\cf` | Format document, or selection in visual mode |
 | `\ax` | Open Codex sidebar |
 | `\ab` | Add current file to Codex |
 | visual `\as` | Add selected line range to Codex |
+
+Buffer shortcuts operate on VS Code tabs and use its normal save prompts.
+`\bi` uses the [VS Code tab API](https://code.visualstudio.com/api/references/vscode-api#TabGroups)
+through [VS Code Neovim's asynchronous JavaScript API](https://github.com/vscode-neovim/vscode-neovim#vscodeeval_asynccode-opts)
+to preserve the visible tab in every split editor group.
 
 After changing the configuration, run **Neovim: Restart Extension** in VS Code.
 Regular terminal Neovim retains its existing plugins, OSC52 mappings and

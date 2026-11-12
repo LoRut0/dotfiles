@@ -15,6 +15,22 @@ end
 action("n", "<leader>ff", "workbench.action.quickOpen", "Find Files")
 action("n", "<leader>sg", "workbench.action.findInFiles", "Grep")
 action("n", "<leader>e", "workbench.view.explorer", "Explorer")
+
+-- Manage VS Code tabs instead of the extension's internal Neovim buffers.
+action("n", "<leader>bd", "workbench.action.closeActiveEditor", "Delete Buffer")
+action("n", "<leader>br", "workbench.action.closeEditorsToTheRight", "Delete Buffers to the Right")
+action("n", "<leader>bl", "workbench.action.closeEditorsToTheLeft", "Delete Buffers to the Left")
+action("n", "<leader>bo", "workbench.action.closeOtherEditors", "Delete Other Buffers in Group")
+vim.keymap.set("n", "<leader>bi", function()
+  vscode.eval_async([[
+    const groups = vscode.window.tabGroups;
+    const hidden = groups.all.flatMap(group => group.tabs.filter(tab => !tab.isActive));
+    if (hidden.length > 0) {
+      await groups.close(hidden, true);
+    }
+  ]])
+end, { desc = "Delete Invisible Buffers" })
+
 action("n", "gb", "workbench.action.navigateBack", "Go Back")
 action("n", "gB", "workbench.action.navigateForward", "Go Forward")
 action("n", "gd", "editor.action.revealDefinition", "Go to Definition")
