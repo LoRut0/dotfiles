@@ -1,6 +1,8 @@
 # draw.io navigation
 
-The helper writes native uncompressed `.drawio` XML, not a Mermaid image embedded in a shape. Every source-bearing node carries both a `vscode://file/...:line:column` hyperlink and Draw.io Integration code-link metadata. Conceptual nodes without sources remain unlinked. Edge evidence is linked too. All references are also accessible as separate cards on `Sources`.
+The helper writes native uncompressed `.drawio` XML, not a Mermaid image embedded in a shape. Every source-bearing node carries both a `vscode://file/...:line:column` hyperlink and Draw.io Integration code-link metadata. Conceptual nodes without sources or a `detail_view` remain unlinked. Edge evidence is linked too. All references are also accessible as separate cards on `Sources`.
+
+Conceptual overview nodes with `detail_view` link to a detail page using draw.io's [page-link format](https://www.drawio.com/docs/reference/animation-actions-json/), `data:page/id,<id>`. Select the shape and follow its normal link popup; this is separate from the extension's Code Link double-click. Detail pages have a return link. `Sources` is paginated so individual references remain readable.
 
 ## VS Code — preferred for code navigation
 
@@ -36,6 +38,8 @@ Sources: [draw.io links and tooltips](https://www.drawio.com/docs/manual/links-t
 ## Verification
 
 Parse the XML and check unique cell IDs within each page, valid source/target endpoints and positive geometry. Check encoded URL targets and resolve the extension path starting from the output **file**, with line/column converted back to one-based. Inspect main and route pages, labels, branch spacing, tooltips and `Sources` cards in an available editor. Do not launch source links as part of automated inspection. Distinguish structural verification, visual verification and an actual editor jump; report only what was checked.
+
+If the editor is unavailable, use `scripts/preview.py` with Pillow to inspect PNG previews of the generated XML's geometry, captions, waypoints and label boxes. These previews approximate shapes and fonts and do not execute draw.io. Check text fits, connector crossings are understandable, and the footer clears all edges; don't claim this verifies the editor UI. The renderer keeps source/evidence descriptions in tooltips even when their visible `caption` is short or empty.
 
 The helper's regression checks run independently of any service:
 

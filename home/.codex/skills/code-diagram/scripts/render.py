@@ -8,7 +8,7 @@ from pathlib import Path
 import re
 from urllib.parse import quote
 
-from drawio import render_drawio, validate_layout
+from drawio import render_drawio, validate_layout, page_models
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
 
@@ -144,23 +144,36 @@ def mermaid_from_model(model):
     model["mermaid_ids"] = ids
     lines = [f"flowchart {model.get('direction', 'LR')}"]
     for node in model["nodes"]:
-        symbols = ", ".join(dict.fromkeys(ref["symbol"] for ref in node["sources"]))
-        title = node["label"] + (f" — {symbols}" if symbols else "")
+        title = node.get("caption", node["label"])
         left, right = ('{', '}') if node.get("shape") == "decision" else ('[', ']')
         lines.append(f'  {ids[node["id"]]}{left}"{label(title)}"{right}')
     for edge in model.get("edges", []):
         arrow = "-->" if edge["confidence"] == "confirmed" else "-.->"
-        lines.append(f'  {ids[edge["from"]]} {arrow}|"{label(edge["label"])}"| {ids[edge["to"]]}')
+        caption = edge.get("caption", edge["label"])
+        annotation = f'|"{label(caption)}"|' if caption else ""
+        lines.append(f'  {ids[edge["from"]]} {arrow}{annotation} {ids[edge["to"]]}')
     return "\n".join(lines)
 
 
-def render(model, output):
+def render(model, output, view=None):
     model = prepare_model(copy.deepcopy(model))
     output = output.expanduser().resolve()
     if output.suffix.lower() == ".drawio":
+        if view is not None:
+            raise ValueError("--view selects an HTML view; draw.io contains all views")
         if model.get("mermaid") and len(model["nodes"]) > 1 and not model.get("edges"):
             raise ValueError("draw.io uses nodes/edges; add edge metadata to this older Mermaid model first")
         return render_drawio(model, output)
+    if model.get("views"):
+        pages = dict(page_models(model))
+        chosen = view or next(iter(pages))
+        if chosen not in pages:
+            raise ValueError(f"Unknown view: {chosen}")
+        model = copy.deepcopy(pages[chosen])
+        model.pop("mermaid", None)
+        model["paths"] = []
+    elif view is not None:
+        raise ValueError("This model does not define views")
     model.pop("mermaid_ids", None)
     if not model.get("mermaid"):
         model["mermaid"] = mermaid_from_model(model)
@@ -178,12 +191,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("model", type=Path)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--view", help="HTML view ID; defaults to the first view")
     args = parser.parse_args()
     if args.output.suffix.lower() not in (".drawio", ".html") or args.output.resolve() == args.model.resolve():
         parser.error("Output must be a separate .drawio or .html file")
     try:
         model = json.loads(args.model.read_text(encoding="utf-8"))
-        print(render(model, args.output))
+        print(render(model, args.output, args.view))
     except (ValueError, OSError, TypeError, KeyError) as exc:
         parser.exit(1, f"code-diagram: {exc}\n")
 

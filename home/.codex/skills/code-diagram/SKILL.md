@@ -19,6 +19,14 @@ Default to **working logic**: significant functions, conditions, data stores and
 
 Abstraction and completeness are independent. A detailed business process need not expose helper calls. Support mixed granularity such as “expand pricing, keep persistence in one block.” Do not generate the full call graph merely because symbols are available. State the scenario and relevant omissions in one short scope sentence.
 
+## Make it readable
+
+For a large process, author a compact overview and separate detail `views`. Keep one question or stage per page, usually 6–10 blocks. Preserve the underlying nodes, evidence and edges across those views; a route page should contain its route, not repeat the entire graph with highlights. Do not squeeze a 50-node process onto a single canvas or enlarge boxes while leaving tiny text inside them.
+
+Use short action captions, usually 2–6 words, at 18 px. Keep service names, endpoints, full symbol lists and long explanations in tooltips/source references unless they are the specific subject of that view. Function-level views can use a significant exact symbol as the caption. Label branches and outcomes concisely; ordinary sequential arrows often need no caption. Put uncertainty in the legend, styling and tooltip instead of repeating long annotations on every arrow.
+
+The renderer wraps captions, routes connectors around blocks and places edge captions in free space. It rejects overlapping blocks, overly long captions, more than 12 nodes per page and canvases over 1500×1100. Resolve those failures by editing the view, not reducing fonts. `allow_large_page` is for an explicitly requested poster or large canvas only. Manual geometry belongs to a particular view; retain clear corridors between rows/columns and inspect the result at normal reading size.
+
 ## Ground the explanation
 
 - Check each function's definition and source position. Never invent names or lines. When useful, add a second reference to the call site with a descriptive label.
@@ -38,7 +46,7 @@ Generate with the standard-library-only helper (Python 3.10+); substitute the ac
 python3 /path/to/code-diagram/scripts/render.py /path/to/diagram.json --output /path/to/diagram.drawio
 ```
 
-This creates editable native shapes/connectors in uncompressed `.drawio` XML. It validates source locations and adds links to the first source of each node and the first evidence reference of each edge. Hover tooltips contain explanations, excerpts and uncertainty. A `Sources` page provides an individually linked card for every source reference; named paths become extra pages with a highlighted route. Layout follows graph direction by default; supply node geometry for deliberate placement. XML escaping is handled by the helper. It does not analyze code or prove edge semantics.
+This creates editable native shapes/connectors in uncompressed `.drawio` XML. It validates source locations and adds links to the first source of each node and the first evidence reference of each edge. Hover tooltips contain explanations, excerpts and uncertainty. Paginated `Sources` cards retain every distinct source location. Explicit `views` define pages; without views, named paths become focused route pages. Overview nodes can link to a `detail_view`, and detail pages include a return link. XML escaping is handled by the helper. It does not analyze code or prove edge semantics.
 
 Read [draw.io navigation and verification](references/drawio.md) before choosing how to open the result. Prefer an already installed Draw.io Integration extension in VS Code for offline editing and code navigation. Do not install an editor, extension or URL handler or change editor configuration merely to display a diagram. If no suitable local viewer is available, deliver the `.drawio` file and generate/open a companion HTML for immediate viewing. Do not upload source or diagram content to online services without the user's request.
 
@@ -50,7 +58,11 @@ python3 /path/to/code-diagram/scripts/render.py /path/to/diagram.json --output /
 
 HTML embeds the vendored Mermaid runtime, needs no server or extension, and keeps the contextual source panel, source excerpts, path highlighting/step-through and SVG/PNG export. Without explicit Mermaid text, the helper derives it from the nodes/edges. It also saves a sibling `.mmd`. These interactive HTML controls are not reproduced by the native draw.io file.
 
+For a model with `views`, HTML renders only the first view by default; use `--view <id>` for a detail view. Its Mermaid graph is derived from that view. Do not export the full underlying graph as the HTML fallback for a deliberately split diagram.
+
 Check the generated artifact before delivery. For draw.io inspect native shapes, edge endpoints, page layout, tooltips, source metadata and the extension's relative paths; use an available local editor for visual verification. For HTML check rendering, panel interaction/scrolling, source `href` targets, route highlighting and export when browser inspection is available. Do not launch source links during automated checks. If GUI verification is unavailable, state the limit instead of claiming the UI was checked.
+
+When GUI access is unavailable, `scripts/preview.py diagram.drawio --output-dir preview` can render PNG previews of the generated XML geometry (optional Pillow dependency; `--font` selects a TrueType font). Inspect the overview and dense detail pages for text overflow, confusing shared connector segments and collisions. This is a layout preview, not a verification of draw.io's own rendering or editor navigation. The script's preview shapes are approximate; code links are not executed.
 
 Open the result with the available local viewer after generation or rerendering, and when the user asks to view an existing artifact. Verify the absolute file path first. For HTML on macOS invoke `open '/absolute/path/diagram.html'`; on other platforms use the equivalent opener. For `.drawio`, use the installed editor described in the reference. If opening is blocked or no editor is installed, provide the file link and explain that limit.
 

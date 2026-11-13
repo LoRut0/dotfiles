@@ -9,6 +9,8 @@ from urllib.parse import unquote, urlsplit
 import xml.etree.ElementTree as ET
 
 from render import render
+from drawio import layout
+from routing import intersects, rectangle, route
 
 
 class RenderTests(unittest.TestCase):
@@ -68,9 +70,10 @@ class RenderTests(unittest.TestCase):
         self.assertIn('return "<yes> & no"', node.attrib["tooltip"])
         self.assertEqual(len(json.loads(node.attrib["codeDiagramSources"])), 2)
         self.assertNotIn("link", root.find("object[@id='node-stop']").attrib)
-        self.assertEqual(len(pages[2].findall(".//object[@link]")), 4)
+        self.assertEqual(len(pages[2].findall(".//object[@link]")), 2)
         self.assertEqual(pages[1].attrib["name"], "Успех")
-        self.assertIn("strokeWidth=3", pages[1].find(".//object[@id='node-save']/mxCell").attrib["style"])
+        self.assertEqual(len(pages[1].findall(".//object[@codeDiagramSources]")), 2)
+        self.assertEqual(len(pages[1].findall(".//mxCell[@edge='1']")), 1)
 
     def test_layout_keeps_branch_boxes_apart_and_manual_geometry(self):
         xml = self.generate()
@@ -144,6 +147,50 @@ class RenderTests(unittest.TestCase):
         self.assertEqual(model["mermaid_ids"]["end"], "code_end")
         self.assertIn('code_end["', model["mermaid"])
         self.assertIn("#34;A#38;B#34;", model["mermaid"])
+
+    def test_routes_avoid_nodes_and_support_self_loops(self):
+        positions = layout(self.model)
+        for edge in self.model["edges"] + [{"from": "check", "to": "check"}]:
+            points, _, _ = route(edge["from"], edge["to"], positions)
+            self.assertGreater(len(points), 1)
+            for a, b in zip(points, points[1:]):
+                self.assertTrue(a[0] == b[0] or a[1] == b[1])
+                for node_id, g in positions.items():
+                    self.assertFalse(intersects(a, b, rectangle(g)), (edge, node_id, a, b))
+
+    def test_connector_detours_around_an_existing_caption(self):
+        positions = {"a": {"x": 70, "y": 170, "width": 250, "height": 100},
+                     "b": {"x": 460, "y": 170, "width": 250, "height": 100}}
+        caption_box = (340, 205, 440, 235)
+        points, _, _ = route("a", "b", positions, avoid=[caption_box])
+        for a, b in zip(points, points[1:]):
+            self.assertFalse(intersects(a, b, caption_box))
+
+    def test_dense_pages_and_long_labels_require_editorial_changes(self):
+        model = copy.deepcopy(self.model)
+        model["nodes"] += [{"id": f"extra{i}", "label": "Concept", "sources": [], "note": "No code"} for i in range(10)]
+        with self.assertRaisesRegex(ValueError, "12 nodes"):
+            self.generate(model)
+        self.model["nodes"][0]["label"] = "A long explanation " * 30
+        with self.assertRaisesRegex(ValueError, "short caption"):
+            self.generate()
+        self.model["nodes"][0]["caption"] = "Check input"
+        self.generate()
+
+    def test_views_preserve_all_edges_and_html_selects_one_view(self):
+        self.model["views"] = [
+            {"id": "main", "title": "Main", "nodes": ["check", "save"], "edges": [0, 2]},
+            {"id": "exit", "title": "Exit", "nodes": ["check", "stop"], "edges": [1]},
+        ]
+        xml = self.generate()
+        self.assertEqual([p.get("id") for p in xml.findall("diagram")], ["main", "exit", "sources-1"])
+        html = self.output.with_suffix(".html")
+        render(self.model, html, view="exit")
+        payload = re.search(r'<script id="model" type="application/json">(.*?)</script>', html.read_text(), re.S)
+        self.assertEqual({n["id"] for n in json.loads(payload.group(1))["nodes"]}, {"check", "stop"})
+        self.model["views"][0]["edges"] = [0]
+        with self.assertRaisesRegex(ValueError, "missing.*edges"):
+            self.generate()
 
 
 if __name__ == "__main__":

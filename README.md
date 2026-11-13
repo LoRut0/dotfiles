@@ -61,7 +61,9 @@ them before deploying; Dotter does not replace them without `--force`.
 
 The `ai` profile also deploys `code-diagram` into `~/.codex/skills`. It generates
 editable `.drawio` flowcharts from inspected code, with verified source locations,
-tooltips, route pages and a `Sources` page. With Draw.io Integration installed in
+tooltips, a compact overview, detail pages and paginated source cards. Large
+processes are split into views; captions stay readable and connectors route
+around blocks. With Draw.io Integration installed in
 VS Code, enable **Code Link** and double-click a block to open its source position;
 keep the diagram in the second editor column. The extension is installed separately.
 An optional offline HTML companion retains the contextual panel and guided paths.
