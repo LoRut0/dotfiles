@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Code Diagram</title>
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#213044;background:#f4f6fa;color-scheme:light}
+*{box-sizing:border-box}body{margin:0}header{padding:28px 32px 20px;background:#fff;border-bottom:1px solid #dce3ec}
+.eyebrow{font-size:11px;letter-spacing:.15em;font-weight:750;color:#61718a;text-transform:uppercase}h1{font-size:26px;margin:9px 0}p{line-height:1.6;margin:8px 0;color:#586880}#scope{max-width:1000px}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:18px}button,.button{border:1px solid #d2dae5;background:white;border-radius:8px;padding:8px 12px;font:inherit;font-size:13px;cursor:pointer;color:#213044}button:hover{background:#edf3ff}button:disabled{opacity:.4;cursor:default}#status{font-size:12px;margin-left:8px;color:#61718a}
+main{display:block;padding:16px 32px 28px}main.has-details{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,340px);gap:20px;align-items:start}.diagram-stage{min-width:0}#viewport{padding:16px 0;overflow:visible}#diagram{min-width:100%;min-height:360px;display:flex;justify-content:center;align-items:flex-start}#diagram svg{flex-shrink:0;max-width:none!important}#diagram a{cursor:pointer}#diagram .source-node:focus{outline:3px solid #3478df}#diagram .source-node:hover rect,#diagram .source-node:hover polygon{stroke:#3478df!important;stroke-width:2px!important}#diagram .source-node.selected-node rect,#diagram .source-node.selected-node polygon{stroke:#3478df!important;stroke-width:3px!important}
+#details-panel{min-width:0;border:1px solid #dce3ec;background:#fff;border-radius:12px;position:sticky;top:16px;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);display:flex;flex-direction:column;overflow:hidden}#details-panel[hidden]{display:none}#details-header{display:flex;align-items:start;justify-content:space-between;gap:10px;padding:18px 18px 12px;border-bottom:1px solid #e7ebf1;flex:none}#details-scroll{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:0 18px 18px}#details-close{padding:5px 9px}h2{font-size:16px;margin:0 0 6px}.source-card h3{font-size:13px;margin:14px 0 8px}.source-card a,.edge-card a{display:block;color:#245eaf;text-decoration:none;margin-top:10px;overflow-wrap:anywhere}.source-card a:hover,.edge-card a:hover{text-decoration:underline}.symbol{font:12px ui-monospace,monospace;font-weight:650}.location{display:block;color:#738098;font:11px ui-monospace,monospace;margin-top:4px}.note{font-size:12px;color:#61718a;line-height:1.5}details{margin:0 32px 24px}summary{cursor:pointer;font-size:13px;color:#61718a}pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:16px;background:#e9eef5;border-radius:8px;font-size:12px}#error{color:#a32626;white-space:pre-wrap;padding:16px;display:none}footer{padding:0 32px 24px;color:#738098;font-size:11px;overflow-wrap:anywhere}a:focus-visible,button:focus-visible,#details-scroll:focus-visible{outline:3px solid #3478df;outline-offset:3px}
+@media(max-width:850px){header{padding:20px}main,main.has-details{display:flex;flex-direction:column;padding:16px}#details-panel{order:-1;position:static;width:100%;max-height:65vh;max-height:65dvh}.diagram-stage{width:100%}#viewport{padding:12px 0}#diagram{min-height:300px}details{margin:0 16px 20px}footer{padding:0 16px 20px}}
+.toolbar select{max-width:240px;border:1px solid #d2dae5;background:#fff;border-radius:8px;padding:8px 10px;font:inherit;font-size:13px;color:#213044}
+.toolbar select:focus-visible{outline:3px solid #3478df;outline-offset:3px}
+.description{font-size:12px;line-height:1.55;color:#40516b;margin:0 0 8px}
+.snippet{margin:10px 0 0;padding:10px;background:#f1f5fa;border-radius:7px;font-size:11px;line-height:1.5;white-space:pre;overflow:auto}
+.snippet-link{font-size:11px}
+#connections-section{margin-top:24px}#connections{display:flex;flex-direction:column;gap:8px}
+.edge-card{border:1px solid #dce3ec;border-radius:8px;padding:10px 12px;background:#fff;font-size:12px;line-height:1.5}
+.edge-card strong{display:block;font-size:12px}.edge-meta{font-size:11px;color:#61718a}
+.badge{display:inline-block;border-radius:99px;padding:1px 7px;margin-left:5px;font-size:10px;font-weight:650}
+.badge.confirmed{background:#e0f2e9;color:#17613c}.badge.inferred{background:#fff2d8;color:#855600}.badge.unresolved{background:#fce7e7;color:#a32626}
+#diagram.has-path .source-node:not(.path-node){opacity:.25}
+#diagram.has-path path.flowchart-link:not(.path-edge){opacity:.22}
+#diagram .source-node.path-node rect,#diagram .source-node.path-node polygon{stroke:#2563eb!important;stroke-width:2.5px!important}
+#diagram .source-node.current-step rect,#diagram .source-node.current-step polygon{stroke:#d97706!important;stroke-width:4px!important}
+#diagram path.flowchart-link.path-edge{stroke:#2563eb!important;stroke-width:3px!important;opacity:1!important}
+#diagram path.flowchart-link.edge-inferred{stroke-dasharray:7 5}
+#diagram path.flowchart-link.edge-unresolved{stroke-dasharray:3 5}
+</style>
+</head>
+<body>
+<header><div class="eyebrow">Code Diagram · Mermaid → VS Code</div><h1 id="title"></h1><p id="scope"></p>
+<div class="toolbar"><button id="fit" disabled>Вписать</button><button id="minus" disabled aria-label="Уменьшить масштаб">−</button><button id="plus" disabled aria-label="Увеличить масштаб">+</button><select id="path-select" aria-label="Выбрать путь" hidden></select><button id="previous-step" disabled hidden>Назад</button><button id="next-step" disabled hidden>Шаг вперёд</button><button id="download">Mermaid</button><button id="download-svg" disabled>SVG</button><button id="download-png" disabled>PNG</button><span id="status" role="status">Отрисовка…</span></div></header>
+<main id="main"><section class="diagram-stage"><div id="error" role="alert"></div><div id="viewport"><div id="diagram"></div></div></section>
+<aside id="details-panel" aria-labelledby="details-title" hidden><div id="details-header"><h2 id="details-title"></h2><button id="details-close" type="button" aria-label="Закрыть сведения о блоке">Закрыть</button></div><div id="details-scroll" tabindex="0" aria-label="Сведения о выбранном блоке"><div id="node-details"></div><section id="connections-section" hidden><h2>Связи блока</h2><div id="connections"></div></section></div></aside></main>
+<details><summary>Текст Mermaid</summary><pre id="source-text"></pre></details>
+<footer>Ссылки указывают на проверенные позиции при создании схемы и могут устареть после правок кода. <span id="root"></span></footer>
+<script id="model" type="application/json">__MODEL_JSON__</script>
+<script src="data:text/javascript;base64,__MERMAID_RUNTIME__"></script>
+<script>
+(async () => {
+  const model = JSON.parse(document.getElementById('model').textContent);
+  const $ = id => document.getElementById(id);
+  document.title = model.title;
+  $('title').textContent = model.title;
+  $('scope').textContent = model.scope;
+  $('root').textContent = 'Проект: ' + model.root;
+  $('source-text').textContent = model.mermaid;
+  const nodesById = new Map(model.nodes.map(node => [node.id, node]));
+  const nodeLabels = new Map(model.nodes.map(node => [node.id, node.label]));
+  const mermaidId = id => (model.mermaid_ids || {})[id] || id;
+  const relationLabels = {process:'порядок', call:'вызов', data:'данные', async:'асинхронно'};
+  const confidenceLabels = {confirmed:'подтверждено', inferred:'вывод', unresolved:'не разрешено'};
+  function sourceLink(ref) {
+    const link = document.createElement('a'); link.href = ref.url;
+    const symbol = document.createElement('span'); symbol.className = 'symbol'; symbol.textContent = ref.symbol + (ref.label ? ' · ' + ref.label : '');
+    const location = document.createElement('span'); location.className = 'location'; location.textContent = `${ref.file}:${ref.line}:${ref.column}`;
+    link.append(symbol, location);
+    return link;
+  }
+  function renderNodeDetails(node) {
+    const content = $('node-details'); content.replaceChildren();
+    $('details-title').textContent = node.label;
+    const card = document.createElement('section'); card.className = 'source-card';
+    if (node.description) { const description = document.createElement('p'); description.className = 'description'; description.textContent = node.description; card.append(description); }
+    if (node.note) { const note = document.createElement('div'); note.className = 'note'; note.textContent = node.note; card.append(note); }
+    if (node.sources.length) {
+      const heading = document.createElement('h3'); heading.textContent = 'Исходный код'; card.append(heading);
+      for (const ref of node.sources) card.append(sourceLink(ref));
+    }
+    if (node.snippet) {
+      const snippet = document.createElement('pre'); snippet.className = 'snippet';
+      const code = document.createElement('code'); code.textContent = node.snippet.text; snippet.append(code); card.append(snippet);
+      const link = document.createElement('a'); link.className = 'snippet-link'; link.href = node.snippet.url;
+      link.textContent = `${node.snippet.file}:${node.snippet.start}–${node.snippet.end} · открыть фрагмент`;
+      card.append(link);
+    }
+    content.append(card);
+    const related = (model.edges || []).filter(edge => edge.from === node.id || edge.to === node.id);
+    $('connections-section').hidden = related.length === 0;
+    $('connections').replaceChildren();
+    for (const edge of related) {
+      const card = document.createElement('div'); card.className = 'edge-card';
+      const heading = document.createElement('strong'); heading.textContent = `${nodeLabels.get(edge.from)} → ${nodeLabels.get(edge.to)}`;
+      const badge = document.createElement('span'); badge.className = 'badge ' + edge.confidence; badge.textContent = confidenceLabels[edge.confidence]; heading.append(badge); card.append(heading);
+      const meta = document.createElement('div'); meta.className = 'edge-meta'; meta.textContent = `${relationLabels[edge.relation]} · ${edge.label}`; card.append(meta);
+      if (edge.note) { const note = document.createElement('div'); note.className = 'note'; note.textContent = edge.note; card.append(note); }
+      for (const ref of edge.evidence || []) {
+        const link = document.createElement('a'); link.href = ref.url; link.textContent = `${ref.symbol} · ${ref.file}:${ref.line}`; card.append(link);
+      }
+      $('connections').append(card);
+    }
+  }
+  $('download').onclick = () => {
+    const url = URL.createObjectURL(new Blob([model.mermaid + '\n'], {type:'text/plain;charset=utf-8'}));
+    const a = document.createElement('a'); a.href = url; a.download = 'diagram.mmd'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+  try {
+    mermaid.initialize({startOnLoad:false, securityLevel:'strict', theme:'base', look:'classic', fontFamily:'system-ui, sans-serif',
+      themeVariables:{primaryColor:'#edf3ff',primaryBorderColor:'#95afd2',primaryTextColor:'#213044',lineColor:'#7186a2',fontSize:'15px'},
+      flowchart:{htmlLabels:false,curve:'basis',useMaxWidth:false}});
+    const result = await mermaid.render('code-diagram-svg', model.mermaid);
+    $('diagram').innerHTML = result.svg;
+    const svg = $('diagram').querySelector('svg');
+    const rendered = [...svg.querySelectorAll('g.node')];
+    const matched = new Set();
+    const nodeAnchors = new Map();
+    let selectedNodeId = null;
+    for (const node of model.nodes) {
+      const group = rendered.find(g => new RegExp('^(?:code-diagram-svg-)?flowchart-' + mermaidId(node.id) + '-\\d+$').test(g.id));
+      if (!group) throw new Error('Не найден узел Mermaid: ' + node.id);
+      matched.add(group);
+      const anchor = document.createElementNS('http://www.w3.org/2000/svg','a'); anchor.classList.add('source-node');
+      anchor.setAttribute('tabindex','0'); anchor.setAttribute('aria-label', node.label + ' — показать сведения и исходный код');
+      anchor.setAttribute('aria-controls','details-panel'); anchor.setAttribute('aria-expanded','false');
+      anchor.setAttribute('href','#details-panel');
+      group.before(anchor); anchor.append(group);
+      nodeAnchors.set(node.id, anchor);
+      anchor.addEventListener('click', event => {
+        event.preventDefault();
+        if (selectedNodeId === node.id) closeDetails(); else showDetails(node.id);
+      });
+      anchor.addEventListener('keydown', event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          if (selectedNodeId === node.id) closeDetails(); else showDetails(node.id);
+        }
+      });
+    }
+    if (matched.size !== rendered.length) throw new Error('У некоторых узлов отсутствуют метаданные исходников.');
+    const renderedEdges = [...svg.querySelectorAll('path.flowchart-link')];
+    const usedEdges = new Set();
+    const edgePaths = new Map();
+    for (const [index, edge] of (model.edges || []).entries()) {
+      const prefix = `L_${mermaidId(edge.from)}_${mermaidId(edge.to)}_`;
+      let element = renderedEdges.find(item => item.id.startsWith(prefix) && !usedEdges.has(item));
+      if (!element && renderedEdges.length === model.edges.length) element = renderedEdges[index];
+      if (!element) continue;
+      usedEdges.add(element);
+      element.classList.add('edge-' + edge.confidence);
+      const key = `${edge.from}\u0000${edge.to}`;
+      if (!edgePaths.has(key)) edgePaths.set(key, []);
+      edgePaths.get(key).push(element);
+    }
+    let selectedPath = null;
+    let stepIndex = -1;
+    let zoom = 1;
+    let fitted = true;
+    const box = svg.viewBox.baseVal;
+    function resize() {
+      svg.style.width = box.width * zoom + 'px'; svg.style.height = box.height * zoom + 'px';
+      $('diagram').style.justifyContent = box.width * zoom > $('viewport').clientWidth ? 'flex-start' : 'center';
+      const step = selectedPath && stepIndex >= 0 ? ` · шаг ${stepIndex + 1}/${selectedPath.nodes.length}` : '';
+      $('status').textContent = `${model.nodes.length} блоков · ${Math.round(zoom*100)}%${step}`;
+    }
+    function updateLayout() {
+      requestAnimationFrame(() => {
+        if (fitted) fit(); else resize();
+        if (window.matchMedia('(max-width:850px)').matches && selectedNodeId) {
+          $('details-panel').scrollIntoView({behavior:'smooth',block:'start'});
+        }
+      });
+    }
+    function showDetails(id) {
+      selectedNodeId = id;
+      renderNodeDetails(nodesById.get(id));
+      $('details-scroll').scrollTop = 0;
+      $('details-panel').hidden = false;
+      $('main').classList.add('has-details');
+      for (const [nodeId, anchor] of nodeAnchors) {
+        anchor.classList.toggle('selected-node', nodeId === id);
+        anchor.setAttribute('aria-expanded', String(nodeId === id));
+      }
+      updateLayout();
+    }
+    function closeDetails() {
+      const previous = selectedNodeId;
+      selectedNodeId = null;
+      $('details-panel').hidden = true;
+      $('main').classList.remove('has-details');
+      for (const anchor of nodeAnchors.values()) {
+        anchor.classList.remove('selected-node'); anchor.setAttribute('aria-expanded','false');
+      }
+      if (previous && document.activeElement === $('details-close')) nodeAnchors.get(previous)?.focus();
+      updateLayout();
+    }
+    $('details-close').onclick = closeDetails;
+    function showPath() {
+      $('diagram').classList.toggle('has-path', Boolean(selectedPath));
+      for (const anchor of nodeAnchors.values()) anchor.classList.remove('path-node','current-step');
+      for (const edge of renderedEdges) edge.classList.remove('path-edge');
+      if (selectedPath) {
+        for (const id of selectedPath.nodes) nodeAnchors.get(id).classList.add('path-node');
+        for (let i = 0; i < selectedPath.nodes.length - 1; i++) {
+          const key = `${selectedPath.nodes[i]}\u0000${selectedPath.nodes[i + 1]}`;
+          for (const edge of edgePaths.get(key) || []) edge.classList.add('path-edge');
+        }
+        if (stepIndex >= 0) {
+          const id = selectedPath.nodes[stepIndex];
+          nodeAnchors.get(id).classList.add('current-step');
+        }
+      }
+      $('previous-step').disabled = !selectedPath || stepIndex < 0;
+      $('next-step').disabled = !selectedPath || stepIndex >= selectedPath.nodes.length - 1;
+      resize();
+    }
+    if (model.paths?.length) {
+      const select = $('path-select'); select.hidden = false;
+      select.add(new Option('Все пути', ''));
+      for (const path of model.paths) select.add(new Option(path.label, path.id));
+      $('previous-step').hidden = false; $('next-step').hidden = false;
+      select.onchange = () => { selectedPath = model.paths.find(path => path.id === select.value) || null; stepIndex = -1; closeDetails(); showPath(); };
+      $('previous-step').onclick = () => { closeDetails(); stepIndex--; showPath(); };
+      $('next-step').onclick = () => { closeDetails(); stepIndex++; showPath(); };
+    }
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a'); link.href = url; link.download = filename; link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+    function exportSvg() {
+      const copy = svg.cloneNode(true);
+      copy.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      copy.setAttribute('width', Math.ceil(box.width)); copy.setAttribute('height', Math.ceil(box.height));
+      copy.removeAttribute('style');
+      copy.classList.toggle('has-path', Boolean(selectedPath));
+      const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+      style.textContent = 'svg.has-path .source-node:not(.path-node){opacity:.25}svg.has-path path.flowchart-link:not(.path-edge){opacity:.22}.source-node.path-node rect,.source-node.path-node polygon{stroke:#2563eb!important;stroke-width:2.5px!important}.source-node.current-step rect,.source-node.current-step polygon{stroke:#d97706!important;stroke-width:4px!important}path.flowchart-link.path-edge{stroke:#2563eb!important;stroke-width:3px!important;opacity:1!important}path.flowchart-link.edge-inferred{stroke-dasharray:7 5}path.flowchart-link.edge-unresolved{stroke-dasharray:3 5}';
+      copy.insertBefore(style, copy.firstChild);
+      return new Blob([new XMLSerializer().serializeToString(copy)], {type:'image/svg+xml;charset=utf-8'});
+    }
+    $('download-svg').onclick = () => downloadBlob(exportSvg(), 'diagram.svg');
+    $('download-png').onclick = async () => {
+      const url = URL.createObjectURL(exportSvg());
+      try {
+        const image = new Image(); image.src = url; await image.decode();
+        const scale = Math.min(3, 2400 / Math.max(box.width, box.height));
+        const canvas = document.createElement('canvas'); canvas.width = Math.ceil(box.width * scale); canvas.height = Math.ceil(box.height * scale);
+        const context = canvas.getContext('2d'); context.fillStyle = '#fff'; context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        if (!blob) throw new Error('Не удалось создать PNG');
+        downloadBlob(blob, 'diagram.png');
+      } catch (error) { $('status').textContent = 'Ошибка экспорта PNG: ' + error; }
+      finally { URL.revokeObjectURL(url); }
+    };
+    $('download-svg').disabled = false; $('download-png').disabled = false;
+    function fit() { fitted = true; zoom = Math.min(1, Math.max(.15,$('viewport').clientWidth / box.width)); resize(); }
+    $('fit').onclick = fit;
+    $('plus').onclick = () => {fitted = false; zoom = Math.min(4,zoom*1.25); resize();};
+    $('minus').onclick = () => {fitted = false; zoom = Math.max(.15,zoom/1.25); resize();};
+    for (const id of ['fit','plus','minus']) $(id).disabled = false;
+    fit(); window.addEventListener('resize', () => { if (fitted) fit(); else resize(); });
+    document.body.dataset.ready = 'true';
+  } catch (error) {
+    $('status').textContent = 'Ошибка диаграммы'; $('error').style.display = 'block';
+    $('error').textContent = String(error); document.body.dataset.ready = 'error';
+  }
+})();
+</script>
+</body>
+</html>

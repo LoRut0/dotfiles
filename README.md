@@ -59,6 +59,18 @@ completed changes to GitHub.
 If the AI dry run reports existing regular files at those targets, reconcile
 them before deploying; Dotter does not replace them without `--force`.
 
+The `ai` profile also deploys `code-diagram` into `~/.codex/skills`. It generates
+editable `.drawio` flowcharts from inspected code, with verified source locations,
+tooltips, route pages and a `Sources` page. With Draw.io Integration installed in
+VS Code, enable **Code Link** and double-click a block to open its source position;
+keep the diagram in the second editor column. The extension is installed separately.
+An optional offline HTML companion retains the contextual panel and guided paths.
+draw.io Desktop can edit the file, but its external-link restrictions prevent
+promising direct `vscode:` navigation. See the
+[skill instructions](home/.codex/skills/code-diagram/SKILL.md) for generation and
+viewer details. When adopting a regular local skill directory, move it to a
+backup outside the skills discovery directory before deploying the repository link.
+
 The AI profile also deploys the `prpoll` Zsh function, its Python runtime,
 and the Codex skills `arcanum-pr-agent-helper` (**PR agent helper**, 10-minute
 polling with small authorized fixes) and `arcanum-auto-review` (**Auto review**,

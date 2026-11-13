@@ -90,6 +90,9 @@ default_target_type = "symbolic"
 "home/.codex/skills/arcanum-pr-agent-helper" = { target = "~/.codex/skills/arcanum-pr-agent-helper", type = "symbolic", recurse = false }
 "home/.codex/skills/arcanum-auto-review" = { target = "~/.codex/skills/arcanum-auto-review", type = "symbolic", recurse = false }
 
+[code_diagram_skill.files]
+"home/.codex/skills/code-diagram" = { target = "~/.codex/skills/code-diagram", type = "symbolic", recurse = false }
+
 [sway.files]
 "home-linux/.config/sway" = { target = "~/.config/sway", type = "symbolic", recurse = false }
 

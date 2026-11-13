@@ -1,0 +1,4 @@
+interface:
+  display_name: "Code Diagram"
+  short_description: "Draw.io-схемы кода с переходами в VS Code"
+  default_prompt: "Используй $code-diagram: объясни выбранный процесс редактируемой draw.io-диаграммой на уровне ключевых функций со ссылками в VS Code и открой её в доступном локальном просмотрщике."
