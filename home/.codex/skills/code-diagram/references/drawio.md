@@ -1,10 +1,58 @@
-# draw.io navigation
+# draw.io workflow — explicit request
+
+Use this branch only when the user asks for draw.io generation or conversion,
+or names an existing `.drawio` for editing/viewing. Ordinary new diagrams use
+[the HTML/Mermaid workflow](html.md).
+
+## Convert or generate
+
+For a conversion, locate the existing `diagram.json` beside the HTML/Mermaid
+artifacts. Reuse its nodes, edges, descriptions, evidence, source references,
+paths and abstraction; recheck source positions. Preserve the HTML, `.mmd` and
+original JSON. If draw.io needs shorter captions, geometry or page `views`, save
+those presentation changes in a sibling `diagram.drawio.json` and render from
+that copy. Preserve every original node/edge and its evidence across pages.
+
+For an older model with explicit Mermaid but incomplete edge metadata, reconcile
+the graph into complete `nodes`/`edges` using the existing diagram and inspected
+code before export. The renderer does not parse Mermaid into draw.io connectors.
+If only HTML remains, recover its embedded model (`script#model`); if only `.mmd`
+remains, reconstruct and verify the missing source metadata. Do not invent links
+or silently omit branches to complete the conversion. If the user explicitly
+requests a new draw.io diagram, author the model directly; no preliminary HTML is
+required. See [the shared input contract](input.md).
+
+```sh
+python3 /path/to/code-diagram/scripts/render.py /path/to/diagram.json --output /path/to/diagram.drawio
+```
+
+Substitute `diagram.drawio.json` when using an adapted copy. This exports native
+shapes and connectors; it does not embed a screenshot of the HTML diagram.
+The HTML contextual panel, guided path controls and export UI do not transfer.
+Their source references/explanations become links, tooltips and `Sources` cards;
+routes can become focused pages. Manual draw.io edits do not sync back into HTML
+or JSON: inspect and preserve them before rerendering, either by patching XML or
+reconciling the edited content/geometry into the export model.
+
+## Readable pages
+
+For a large process, use a compact overview and separate detail `views`, usually
+6–10 blocks each. Without views, named paths become focused route pages, not
+copies of the full graph. Use short captions at 18 px; full labels and explanations
+remain in tooltips. The renderer wraps captions, routes around blocks and places
+edge captions in free space. It rejects overlaps, overly long captions, more
+than 12 nodes per page and canvases over 1500×1100. Resolve failures by changing
+the view, not reducing fonts. `allow_large_page` is only for an explicitly requested
+poster. Manual geometry belongs to each view; keep clear corridors and inspect
+the result at normal reading size.
+
+## Navigation
 
 The helper writes native uncompressed `.drawio` XML, not a Mermaid image embedded in a shape. Every source-bearing node carries both a `vscode://file/...:line:column` hyperlink and Draw.io Integration code-link metadata. Conceptual nodes without sources or a `detail_view` remain unlinked. Edge evidence is linked too. All references are also accessible as separate cards on `Sources`.
 
 Conceptual overview nodes with `detail_view` link to a detail page using draw.io's [page-link format](https://www.drawio.com/docs/reference/animation-actions-json/), `data:page/id,<id>`. Select the shape and follow its normal link popup; this is separate from the extension's Code Link double-click. Detail pages have a return link. `Sources` is paginated so individual references remain readable.
 
-## Browser — default opening workflow
+## Browser — opening a requested draw.io result
 
 Run `drawio-open '/absolute/path/diagram.drawio'` after generation or rerendering.
 Dotter's `ai` profile installs this command. The standalone fallback is

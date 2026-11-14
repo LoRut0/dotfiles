@@ -59,15 +59,18 @@ completed changes to GitHub.
 If the AI dry run reports existing regular files at those targets, reconcile
 them before deploying; Dotter does not replace them without `--force`.
 
-The `ai` profile also deploys `code-diagram` into `~/.codex/skills`. It generates
-editable `.drawio` flowcharts from inspected code, with verified source locations,
-tooltips, a compact overview, detail pages and paginated source cards. Large
-processes are split into views; captions stay readable and connectors route
-around blocks. With Draw.io Integration installed in
-VS Code, enable **Code Link** and double-click a block to open its source position;
-keep the diagram in the second editor column. The extension is installed separately.
-An optional offline HTML companion retains the contextual panel and guided paths.
-The same profile installs `drawio-open` into `~/.local/bin`:
+The `ai` profile also deploys `code-diagram` into `~/.codex/skills`. Its default
+branch generates an interactive offline HTML/Mermaid diagram from inspected code,
+with a contextual source panel, verified code links, guided paths and SVG/PNG
+export. JSON and `.mmd` are retained beside the HTML for follow-up edits.
+
+A second branch converts that model to editable `.drawio` only on explicit
+request, preserving the HTML/Mermaid originals and the graph's source references.
+It supports compact overview/detail pages, tooltips and paginated source cards.
+With Draw.io Integration installed in VS Code, enable **Code Link** and double-click
+a block to open its source position; keep the diagram in the second editor column.
+The extension is installed separately. The same profile installs `drawio-open`
+into `~/.local/bin` for opening requested draw.io exports:
 
 ```sh
 drawio-open /path/to/diagram.drawio
