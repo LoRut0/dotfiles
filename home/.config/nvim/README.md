@@ -132,3 +132,33 @@ Treesitter behavior.
 In VS Code, `gd` invokes VS Code's Go to Definition; the Neovim OpenAPI
 navigator stays disabled there. Install the 42Crunch OpenAPI Editor extension
 in VS Code to follow OpenAPI `$ref` values across YAML files.
+
+### Which Key hints in VS Code
+
+Install the standalone [Which Key extension](https://marketplace.visualstudio.com/items?itemName=VSpaceCode.whichkey)
+alongside VS Code Neovim, on the local machine (also for Remote SSH):
+
+```sh
+code --install-extension VSpaceCode.whichkey
+```
+
+In Normal or Visual mode, press `\` and pause to see the available commands.
+Pausing after a group prefix such as `\b` or `\c` opens that submenu directly.
+Type the next key to select a group/action, or press Escape to dismiss the menu.
+The popup uses VS Code's Quick Pick UI. Only commands supported in the current
+mode appear; Visual mode includes code actions, selection formatting, copying
+and adding the selection to Codex.
+
+`vscode-whichkey.lua` builds the menus from the same mappings and descriptions
+in `vscode-keymaps.lua`, including LazyVim's VS Code search/terminal aliases.
+There is no separate `whichkey.bindings` JSON configuration. Navigation such as
+`gd` and native Vim operators keep their existing behavior and have no popup.
+
+Complete key sequences still execute directly in Neovim. The popup appears
+after Neovim's existing `timeoutlen` (LazyVim defaults to 1000 ms in VS Code),
+without adding a second delay or changing the timeout for other mappings.
+After choosing `y` in the Normal-mode menu, enter a motion, or `y` to copy a line;
+Visual-mode `y` copies the selection. Direct `\y{motion}` and `\yy` also work.
+If Which Key is absent, complete mappings still work; pausing at a menu prefix
+shows an installation reminder. Restart the Neovim extension after installation
+or configuration changes.
