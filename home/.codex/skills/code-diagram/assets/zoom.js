@@ -1,6 +1,6 @@
 /* Shared diagram scale for buttons, trackpad pinch and Safari gestures. */
 window.createDiagramZoom = function ({svg, viewport, diagram, plus, minus, fitButton,
-  resetButton, onChange, minZoom = 0.025, maxZoom = 4, fitPadding = 24}) {
+  resetButton, onChange, minZoom = 0.025, maxZoom = 4, fitPadding = 32}) {
   let zoom = 1;
   let fitted = true;
   let gestureActive = false;
@@ -20,8 +20,11 @@ window.createDiagramZoom = function ({svg, viewport, diagram, plus, minus, fitBu
   }
 
   function visibleCenter(rect) {
-    const left = Math.max(0, rect.left), right = Math.min(window.innerWidth, rect.right);
-    const top = Math.max(0, rect.top), bottom = Math.min(window.innerHeight, rect.bottom);
+    const frame = viewport.getBoundingClientRect();
+    const left = Math.max(0, frame.left + viewport.clientLeft, rect.left);
+    const right = Math.min(window.innerWidth, frame.left + viewport.clientLeft + viewport.clientWidth, rect.right);
+    const top = Math.max(0, frame.top + viewport.clientTop, rect.top);
+    const bottom = Math.min(window.innerHeight, frame.top + viewport.clientTop + viewport.clientHeight, rect.bottom);
     return {clientX: right > left ? (left + right) / 2 : rect.left,
       clientY: bottom > top ? (top + bottom) / 2 : rect.top};
   }
@@ -40,15 +43,17 @@ window.createDiagramZoom = function ({svg, viewport, diagram, plus, minus, fitBu
     zoom = next;
     refresh();
     const after = svg.getBoundingClientRect();
-    // Account for centering and page scrolling, including when the SVG grows wider than the viewport.
-    window.scrollBy({left: after.left + x * after.width - point.clientX,
+    // Only pan the canvas; the toolbar and details panel stay outside its scroll container.
+    viewport.scrollBy({left: after.left + x * after.width - point.clientX,
       top: after.top + y * after.height - point.clientY, behavior: 'instant'});
   }
 
   function fit() {
     fitted = true;
-    zoom = clamp(Math.min(1, Math.max(1, viewport.clientWidth - fitPadding) / box.width));
+    zoom = clamp(Math.min(1, Math.max(1, viewport.clientWidth - fitPadding) / box.width,
+      Math.max(1, viewport.clientHeight - fitPadding) / box.height));
     refresh();
+    viewport.scrollTo({left: 0, top: 0, behavior: 'instant'});
   }
 
   function relayout() {
@@ -69,7 +74,7 @@ window.createDiagramZoom = function ({svg, viewport, diagram, plus, minus, fitBu
     if (!event.ctrlKey || !event.cancelable) return;
     event.preventDefault();
     if (gestureActive || !Number.isFinite(event.deltaY)) return;
-    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1;
+    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? viewport.clientHeight : 1;
     const exponent = Math.max(-1, Math.min(1, -event.deltaY * unit * 0.01));
     setZoom(zoom * Math.exp(exponent), event);
   }, {passive: false});

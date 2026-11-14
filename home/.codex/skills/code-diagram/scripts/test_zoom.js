@@ -29,18 +29,31 @@ function events(target = {}) {
 
 function fixture() {
   const win = events({innerWidth: 1200, innerHeight: 900, scrollX: 0, scrollY: 0});
-  win.scrollBy = ({left, top}) => {
-    win.scrollX = Math.max(0, win.scrollX + left);
-    win.scrollY = Math.max(0, win.scrollY + top);
-  };
-  const viewport = events({clientWidth: 900, style: {}});
+  win.scrollBy = win.scrollTo = () => assert.fail('Zoom must never scroll the document');
+  const viewport = events({clientWidth: 900, clientHeight: 700, clientLeft: 0, clientTop: 0,
+    scrollLeft: 0, scrollTop: 0, style: {}});
+  viewport.getBoundingClientRect = () => ({left: 0, top: 88, right: viewport.clientWidth,
+    bottom: 88 + viewport.clientHeight, width: viewport.clientWidth, height: viewport.clientHeight});
   const diagram = {style: {}};
   const svg = {viewBox: {baseVal: {width: 1200, height: 800}}, style: {}};
+  function clampScroll() {
+    viewport.scrollLeft = Math.max(0, Math.min(viewport.scrollLeft,
+      (parseFloat(svg.style.width) || 1200) + 32 - viewport.clientWidth));
+    viewport.scrollTop = Math.max(0, Math.min(viewport.scrollTop,
+      (parseFloat(svg.style.height) || 800) + 32 - viewport.clientHeight));
+  }
+  viewport.scrollBy = ({left, top}) => {
+    viewport.scrollLeft += left; viewport.scrollTop += top; clampScroll();
+  };
+  viewport.scrollTo = ({left, top}) => {
+    viewport.scrollLeft = left; viewport.scrollTop = top; clampScroll();
+  };
   svg.getBoundingClientRect = () => {
+    clampScroll(); // Browsers clamp scroll offsets when the diagram shrinks.
     const width = parseFloat(svg.style.width) || 1200;
     const height = parseFloat(svg.style.height) || 800;
-    const left = 32 + (diagram.style.justifyContent === 'center' ? Math.max(0, (viewport.clientWidth - width) / 2) : 0) - win.scrollX;
-    const top = 200 - win.scrollY;
+    const left = Math.max(16, (viewport.clientWidth - width) / 2) - viewport.scrollLeft;
+    const top = 88 + 16 - viewport.scrollTop;
     return {left, top, width, height, right: left + width, bottom: top + height};
   };
   const plus = {}, minus = {}, fitButton = {}, resetButton = {};
@@ -86,7 +99,7 @@ const wheel = (f, ratio, fields = {}) => f.viewport.emit('wheel', {
   near(after.left + after.width * x, point.clientX);
   near(after.top + after.height * y, point.clientY);
   wheel(f, 1 / 1.5, point);
-  near(f.control.scale, .73);
+  near(f.control.scale, 868 / 1200);
 }
 
 // Safari's cumulative scale must not be compounded; overlapping wheel events must not apply it twice.
@@ -120,11 +133,24 @@ const wheel = (f, ratio, fields = {}) => f.viewport.emit('wheel', {
   f.control.setZoom(.001); near(f.control.scale, .025); assert.equal(f.minus.disabled, true);
   f.plus.onclick(); near(f.control.scale, .03125); assert.equal(f.minus.disabled, false);
   f.control.setZoom(NaN); f.control.setZoom(Infinity); near(f.control.scale, .03125);
-  f.fitButton.onclick(); near(f.control.scale, .73);
-  f.viewport.clientWidth = 600; f.win.emit('resize'); near(f.control.scale, .48);
-  f.plus.onclick(); f.viewport.clientWidth = 900; f.win.emit('resize'); near(f.control.scale, .6);
-  f.control.relayout(); near(f.control.scale, .6);
-  f.fitButton.onclick(); near(f.control.scale, .73);
+  f.fitButton.onclick(); near(f.control.scale, 868 / 1200);
+  f.viewport.clientWidth = 600; f.win.emit('resize'); near(f.control.scale, 568 / 1200);
+  f.plus.onclick(); f.viewport.clientWidth = 900; f.win.emit('resize'); near(f.control.scale, 568 / 1200 * 1.25);
+  f.control.relayout(); near(f.control.scale, 568 / 1200 * 1.25);
+  f.fitButton.onclick(); near(f.control.scale, 868 / 1200);
+}
+
+// Pan and zoom change only the scrollable canvas. Fit resets both axes and also respects canvas height.
+{
+  const f = fixture();
+  f.resetButton.onclick();
+  wheel(f, 2);
+  f.viewport.scrollBy({left: 500, top: 400});
+  assert.ok(f.viewport.scrollLeft > 0 && f.viewport.scrollTop > 0);
+  assert.equal(f.win.scrollX, 0); assert.equal(f.win.scrollY, 0);
+  f.fitButton.onclick();
+  assert.equal(f.viewport.scrollLeft, 0); assert.equal(f.viewport.scrollTop, 0);
+  f.viewport.clientHeight = 200; f.win.emit('resize'); near(f.control.scale, 168 / 800);
 }
 
 // Wheel line/page units produce the same change as equivalent pixel deltas.
@@ -132,7 +158,7 @@ const wheel = (f, ratio, fields = {}) => f.viewport.emit('wheel', {
   const pixel = fixture(), line = fixture(), page = fixture();
   wheel(pixel, 1, {deltaY: -16});
   wheel(line, 1, {deltaY: -1, deltaMode: 1});
-  wheel(page, 1, {deltaY: -16 / 900, deltaMode: 2});
+  wheel(page, 1, {deltaY: -16 / 700, deltaMode: 2});
   near(pixel.control.scale, line.control.scale);
   near(pixel.control.scale, page.control.scale);
 }

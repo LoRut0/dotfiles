@@ -6,13 +6,46 @@
 <title>Code Diagram</title>
 <style>
 :root{font-family:system-ui,-apple-system,sans-serif;color:#213044;background:#f4f6fa;color-scheme:light}
-*{box-sizing:border-box}body{margin:0}header{padding:28px 32px 20px;background:#fff;border-bottom:1px solid #dce3ec}
-.eyebrow{font-size:11px;letter-spacing:.15em;font-weight:750;color:#61718a;text-transform:uppercase}h1{font-size:26px;margin:9px 0}p{line-height:1.6;margin:8px 0;color:#586880}#scope{max-width:1000px}
-.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:18px}button,.button{border:1px solid #d2dae5;background:white;border-radius:8px;padding:8px 12px;font:inherit;font-size:13px;cursor:pointer;color:#213044}button:hover{background:#edf3ff}button:disabled{opacity:.4;cursor:default}#status{font-size:12px;margin-left:8px;color:#61718a}
-main{display:block;padding:16px 32px 28px}main.has-details{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,340px);gap:20px;align-items:start}.diagram-stage{min-width:0}#viewport{padding:16px 0;overflow:visible}#diagram{min-width:100%;min-height:360px;display:flex;justify-content:center;align-items:flex-start}#diagram svg{flex-shrink:0;max-width:none!important}#diagram a{cursor:pointer}#diagram .source-node:focus{outline:3px solid #3478df}#diagram .source-node:hover rect,#diagram .source-node:hover polygon{stroke:#3478df!important;stroke-width:2px!important}#diagram .source-node.selected-node rect,#diagram .source-node.selected-node polygon{stroke:#3478df!important;stroke-width:3px!important}
-#details-panel{min-width:0;border:1px solid #dce3ec;background:#fff;border-radius:12px;position:sticky;top:16px;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);display:flex;flex-direction:column;overflow:hidden}#details-panel[hidden]{display:none}#details-header{display:flex;align-items:start;justify-content:space-between;gap:10px;padding:18px 18px 12px;border-bottom:1px solid #e7ebf1;flex:none}#details-scroll{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:0 18px 18px}#details-close{padding:5px 9px}h2{font-size:16px;margin:0 0 6px}.source-card h3{font-size:13px;margin:14px 0 8px}.source-card a,.edge-card a{display:block;color:#245eaf;text-decoration:none;margin-top:10px;overflow-wrap:anywhere}.source-card a:hover,.edge-card a:hover{text-decoration:underline}.symbol{font:12px ui-monospace,monospace;font-weight:650}.location{display:block;color:#738098;font:11px ui-monospace,monospace;margin-top:4px}.note{font-size:12px;color:#61718a;line-height:1.5}details{margin:0 32px 24px}summary{cursor:pointer;font-size:13px;color:#61718a}pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:16px;background:#e9eef5;border-radius:8px;font-size:12px}#error{color:#a32626;white-space:pre-wrap;padding:16px;display:none}footer{padding:0 32px 24px;color:#738098;font-size:11px;overflow-wrap:anywhere}a:focus-visible,button:focus-visible,#details-scroll:focus-visible{outline:3px solid #3478df;outline-offset:3px}
-@media(max-width:850px){header{padding:20px}main,main.has-details{display:flex;flex-direction:column;padding:16px}#details-panel{order:-1;position:static;width:100%;max-height:65vh;max-height:65dvh}.diagram-stage{width:100%}#viewport{padding:12px 0}#diagram{min-height:300px}details{margin:0 16px 20px}footer{padding:0 16px 20px}}
-.toolbar select{max-width:240px;border:1px solid #d2dae5;background:#fff;border-radius:8px;padding:8px 10px;font:inherit;font-size:13px;color:#213044}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden}
+body{margin:0;height:100vh;height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr)}
+header{min-width:0;padding:10px 16px;background:#fff;border-bottom:1px solid #dce3ec;z-index:2}
+h1{font-size:18px;line-height:1.3;margin:0 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+p{line-height:1.6;margin:8px 0;color:#586880}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+button,.button{flex-shrink:0;border:1px solid #d2dae5;background:white;border-radius:6px;padding:6px 9px;font:inherit;font-size:12px;cursor:pointer;color:#213044}
+button:hover{background:#edf3ff}button:disabled{opacity:.4;cursor:default}
+#status{font-size:11px;margin-left:6px;color:#61718a;white-space:nowrap}
+main{position:relative;min-width:0;min-height:0;display:grid;grid-template-columns:minmax(0,1fr);overflow:hidden}
+main.has-details{grid-template-columns:minmax(0,1fr) 320px}
+.diagram-stage{position:relative;min-width:0;min-height:0;overflow:hidden}
+#viewport{width:100%;height:100%;overflow:auto;overscroll-behavior:contain;overflow-anchor:none}
+#viewport:focus-visible{outline:2px solid #3478df;outline-offset:-2px}
+#diagram{width:max-content;min-width:100%;min-height:100%;padding:16px;display:flex;justify-content:center;align-items:flex-start}
+#diagram svg{flex-shrink:0;max-width:none!important}
+#diagram a{cursor:pointer}#diagram .source-node:focus{outline:3px solid #3478df}
+#diagram .source-node:hover rect,#diagram .source-node:hover polygon{stroke:#3478df!important;stroke-width:2px!important}
+#diagram .source-node.selected-node rect,#diagram .source-node.selected-node polygon{stroke:#3478df!important;stroke-width:3px!important}
+#details-panel{min-width:0;min-height:0;height:100%;border-left:1px solid #dce3ec;background:#fff;display:flex;flex-direction:column;overflow:hidden}
+#details-panel[hidden]{display:none}
+#details-header{display:flex;align-items:start;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid #e7ebf1;flex:none}
+#details-title{min-width:0;overflow-wrap:anywhere;line-height:1.35}
+#details-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:12px 14px}
+#details-close{padding:4px 7px;font-size:11px}
+h2{font-size:14px;margin:0 0 6px}.source-card h3{font-size:13px;margin:14px 0 8px}
+.source-card a,.edge-card a{display:block;color:#245eaf;text-decoration:none;margin-top:10px;overflow-wrap:anywhere}
+.source-card a:hover,.edge-card a:hover{text-decoration:underline}
+.symbol{font:12px ui-monospace,monospace;font-weight:650}.location{display:block;color:#738098;font:11px ui-monospace,monospace;margin-top:4px}
+.note{font-size:12px;color:#61718a;line-height:1.5}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:16px;background:#e9eef5;border-radius:8px;font-size:12px}
+#error{position:absolute;inset:12px;z-index:1;overflow:auto;color:#a32626;white-space:pre-wrap;padding:16px;display:none;background:#fff}
+a:focus-visible,button:focus-visible,#details-scroll:focus-visible{outline:3px solid #3478df;outline-offset:3px}
+@media(max-width:700px){
+  header{padding:8px 10px}h1{font-size:16px}.toolbar{gap:4px}
+  main.has-details{grid-template-columns:minmax(0,1fr)}
+  #details-panel{position:absolute;top:0;bottom:0;right:0;width:min(320px,85vw);z-index:3;box-shadow:-8px 0 24px #2130441a}
+}
+.toolbar select{min-width:120px;max-width:200px;border:1px solid #d2dae5;background:#fff;border-radius:6px;padding:6px 8px;font:inherit;font-size:12px;color:#213044}
 .toolbar select:focus-visible{outline:3px solid #3478df;outline-offset:3px}
 .description{font-size:12px;line-height:1.55;color:#40516b;margin:0 0 8px}
 .snippet{margin:10px 0 0;padding:10px;background:#f1f5fa;border-radius:7px;font-size:11px;line-height:1.5;white-space:pre;overflow:auto}
@@ -32,12 +65,10 @@ main{display:block;padding:16px 32px 28px}main.has-details{display:grid;grid-tem
 </style>
 </head>
 <body>
-<header><div class="eyebrow">Code Diagram · Mermaid → VS Code</div><h1 id="title"></h1><p id="scope"></p>
-<div class="toolbar"><button id="fit" disabled>Вписать</button><button id="minus" disabled aria-label="Уменьшить масштаб">−</button><button id="plus" disabled aria-label="Увеличить масштаб">+</button><select id="path-select" aria-label="Выбрать путь" hidden></select><button id="previous-step" disabled hidden>Назад</button><button id="next-step" disabled hidden>Шаг вперёд</button><button id="download">Mermaid</button><button id="download-svg" disabled>SVG</button><button id="download-png" disabled>PNG</button><span id="status" role="status">Отрисовка…</span></div></header>
-<main id="main"><section class="diagram-stage"><div id="error" role="alert"></div><div id="viewport"><div id="diagram"></div></div></section>
+<header><h1 id="title"></h1>
+<div class="toolbar"><button id="fit" disabled>Вписать</button><button id="readable" disabled>100%</button><button id="minus" disabled aria-label="Уменьшить масштаб">−</button><button id="plus" disabled aria-label="Увеличить масштаб">+</button><select id="path-select" aria-label="Выбрать путь" hidden></select><button id="previous-step" disabled hidden>Назад</button><button id="next-step" disabled hidden>Шаг вперёд</button><button id="download">Mermaid</button><button id="download-svg" disabled>SVG</button><button id="download-png" disabled>PNG</button><span id="status" role="status">Отрисовка…</span></div></header>
+<main id="main"><section class="diagram-stage"><div id="error" role="alert"></div><div id="viewport" tabindex="0" aria-label="Диаграмма, область масштабирования и прокрутки"><div id="diagram"></div></div></section>
 <aside id="details-panel" aria-labelledby="details-title" hidden><div id="details-header"><h2 id="details-title"></h2><button id="details-close" type="button" aria-label="Закрыть сведения о блоке">Закрыть</button></div><div id="details-scroll" tabindex="0" aria-label="Сведения о выбранном блоке"><div id="node-details"></div><section id="connections-section" hidden><h2>Связи блока</h2><div id="connections"></div></section></div></aside></main>
-<details><summary>Текст Mermaid</summary><pre id="source-text"></pre></details>
-<footer>Ссылки указывают на проверенные позиции при создании схемы и могут устареть после правок кода. <span id="root"></span></footer>
 <script id="model" type="application/json">__MODEL_JSON__</script>
 <script src="data:text/javascript;base64,__MERMAID_RUNTIME__"></script>
 <script id="diagram-zoom">__ZOOM_RUNTIME__</script>
@@ -47,9 +78,7 @@ main{display:block;padding:16px 32px 28px}main.has-details{display:grid;grid-tem
   const $ = id => document.getElementById(id);
   document.title = model.title;
   $('title').textContent = model.title;
-  $('scope').textContent = model.scope;
-  $('root').textContent = 'Проект: ' + model.root;
-  $('source-text').textContent = model.mermaid;
+  $('title').title = model.title;
   const nodesById = new Map(model.nodes.map(node => [node.id, node]));
   const nodeLabels = new Map(model.nodes.map(node => [node.id, node.label]));
   const mermaidId = id => (model.mermaid_ids || {})[id] || id;
@@ -159,9 +188,6 @@ main{display:block;padding:16px 32px 28px}main.has-details{display:grid;grid-tem
     function updateLayout() {
       requestAnimationFrame(() => {
         zoomController.relayout();
-        if (window.matchMedia('(max-width:850px)').matches && selectedNodeId) {
-          $('details-panel').scrollIntoView({behavior:'smooth',block:'start'});
-        }
       });
     }
     function showDetails(id) {

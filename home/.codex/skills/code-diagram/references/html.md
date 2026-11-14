@@ -32,8 +32,12 @@ and step-through; SVG/PNG export stays available. The helper also writes a sibli
 
 The `+`/`−` buttons and trackpad pinch over the diagram share one scale and percentage
 indicator. Pinch keeps the diagram point under the cursor in place where scrolling
-allows; ordinary scrolling and page zoom outside the diagram keep their browser
-behavior. `Fit` restores automatic fitting. The same controller supports Safari's
+allows. Only the canvas scrolls: the compact title/toolbar stays at the top and the
+node details stay at the right edge with their own content scrollbar. On narrow
+screens the details overlay the right side instead of moving above the diagram.
+The header shows only the title and controls; the full scope remains in the saved
+model. Mermaid source remains available through its download button. `Fit` fits
+both canvas dimensions and resets panning. The same controller supports Safari's
 gesture events as well as Ctrl+wheel pinch events in Chromium/Firefox.
 
 Supply `mermaid` when custom flowchart layout/subgraphs are useful; otherwise the
@@ -52,7 +56,7 @@ Do not silently deliver only an overview while claiming all details are included
 
 Check Mermaid rendering, normal-size readability, node-to-panel mapping, panel
 scrolling, source `href` targets, route highlighting, alternating buttons/pinch,
-cursor anchoring, Fit after manual zoom, and export when browser
+cursor anchoring, fixed toolbar/sidebar during panning, Fit after manual zoom, and export when browser
 inspection is available. Report only what was checked; do not launch code links
 as part of automated inspection.
 
