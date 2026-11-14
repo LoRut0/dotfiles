@@ -92,6 +92,7 @@ default_target_type = "symbolic"
 
 [code_diagram_skill.files]
 "home/.codex/skills/code-diagram" = { target = "~/.codex/skills/code-diagram", type = "symbolic", recurse = false }
+"home/.codex/skills/code-diagram/scripts/open_browser.py" = "~/.local/bin/drawio-open"
 
 [sway.files]
 "home-linux/.config/sway" = { target = "~/.config/sway", type = "symbolic", recurse = false }

@@ -67,6 +67,21 @@ around blocks. With Draw.io Integration installed in
 VS Code, enable **Code Link** and double-click a block to open its source position;
 keep the diagram in the second editor column. The extension is installed separately.
 An optional offline HTML companion retains the contextual panel and guided paths.
+The same profile installs `drawio-open` into `~/.local/bin`:
+
+```sh
+drawio-open /path/to/diagram.drawio
+```
+
+It opens all pages in the default browser without a file picker or local server.
+Python 3 and internet access for the draw.io editor are required. The command
+creates a local HTML snapshot under `~/.cache/drawio-open` (or
+`$XDG_CACHE_HOME/drawio-open`) and passes the XML to the embedded editor using
+`postMessage`, without putting it in a URL. **Save** downloads an edited copy;
+it does not overwrite the original. Run the command again after regenerating
+the diagram. `--no-open` prepares the snapshot and prints its path for a browser
+tool or a machine without a desktop. The cache can be deleted when no longer needed.
+
 draw.io Desktop can edit the file, but its external-link restrictions prevent
 promising direct `vscode:` navigation. See the
 [skill instructions](home/.codex/skills/code-diagram/SKILL.md) for generation and

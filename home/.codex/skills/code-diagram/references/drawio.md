@@ -4,7 +4,29 @@ The helper writes native uncompressed `.drawio` XML, not a Mermaid image embedde
 
 Conceptual overview nodes with `detail_view` link to a detail page using draw.io's [page-link format](https://www.drawio.com/docs/reference/animation-actions-json/), `data:page/id,<id>`. Select the shape and follow its normal link popup; this is separate from the extension's Code Link double-click. Detail pages have a return link. `Sources` is paginated so individual references remain readable.
 
-## VS Code — preferred for code navigation
+## Browser — default opening workflow
+
+Run `drawio-open '/absolute/path/diagram.drawio'` after generation or rerendering.
+Dotter's `ai` profile installs this command. The standalone fallback is
+`python3 /path/to/code-diagram/scripts/open_browser.py '/absolute/path/diagram.drawio'`.
+No Finder, file picker, drag-and-drop, local server or browser extension is needed.
+
+The helper creates a private local HTML snapshot in `~/.cache/drawio-open`
+(or `$XDG_CACHE_HOME/drawio-open`) and opens it in the default browser. It loads
+the full native XML, including all pages, into `https://embed.diagrams.net` using
+the documented [embed JSON protocol](https://www.drawio.com/docs/reference/embed-mode/).
+The editor needs internet; XML is sent via `postMessage` only after checking
+the iframe's origin and window. It is not put in a URL or uploaded by the helper.
+The editor uses `stealth=1` to disable features that require external web services.
+
+**Save** downloads an edited `.drawio` copy; the browser has no write access to
+the original input file. A fresh CLI invocation reads the latest input. Refreshing
+the launcher reloads its original snapshot, so save browser edits before refreshing.
+`--no-open` prints the launcher path without starting a browser, useful for browser
+tools or headless hosts. Cache files can be removed after use. The command uses
+Python's standard library and the existing OS browser opener.
+
+## VS Code — for offline editing and code navigation
 
 With the already installed `hediet.vscode-drawio` extension, open the `.drawio` in the second editor column, enable **Code Link** in the status bar, and double-click a node, edge or source card. The extension opens the exact source position in the first column and keeps the diagram visible. Use F2 or disable Code Link to edit a label. No workspace symbol search is needed for the generated position links.
 
