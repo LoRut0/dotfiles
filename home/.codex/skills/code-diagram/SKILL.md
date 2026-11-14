@@ -9,7 +9,7 @@ Create an explanation grounded in inspected source code. Respond and label conce
 
 ## Choose the branch
 
-- **HTML/Mermaid — default.** For a new code diagram or an ordinary follow-up edit, use [the HTML workflow](references/html.md): interactive offline HTML, a Mermaid source file and a retained JSON model. Keep the contextual source panel, source links and guided paths. Do not generate or open draw.io unless requested; there is no need to ask which format to use.
+- **HTML/Mermaid — default.** For a new code diagram or an ordinary follow-up edit, use [the HTML workflow](references/html.md): interactive offline HTML, a Mermaid source file and a retained JSON model. The renderer CLI automatically opens HTML in the default browser after generation and rerendering; do not open a duplicate tab with a separate command. Keep the contextual source panel, source links and guided paths. Do not generate or open draw.io unless requested; there is no need to ask which format to use.
 - **draw.io — explicit request.** For “convert this to drawio”, “сделай версию для draw.io” or a new diagram explicitly requested in `.drawio`, use [the draw.io workflow](references/drawio.md). Convert from the existing model, preserve the HTML/Mermaid originals and open the export with `drawio-open`. A request to open an existing `.drawio` only opens that file; it does not change the default for new diagrams.
 
 Use only the selected branch's workflow. For a conversion, reuse the inspected explanation and recheck source positions rather than starting a new analysis or changing its abstraction level. If the user names an existing artifact for editing, retain that artifact's format.

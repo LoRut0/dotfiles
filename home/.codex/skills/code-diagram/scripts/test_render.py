@@ -1,14 +1,19 @@
 """Artifact and navigation checks; no application/service build or tests."""
 import copy
+from contextlib import redirect_stderr, redirect_stdout
+import io
 import json
 import re
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from urllib.parse import unquote, urlsplit
 import xml.etree.ElementTree as ET
 
-from render import render
+from render import main, render
 from drawio import layout
 from routing import intersects, rectangle, route
 
@@ -129,6 +134,61 @@ class RenderTests(unittest.TestCase):
         legacy["mermaid"] = 'flowchart TB\n check["Check"] --> save["Save"]'
         render(legacy, html)
         self.assertEqual(html.with_suffix(".mmd").read_text().strip(), legacy["mermaid"])
+
+    def run_cli(self, output, *options):
+        model_path = self.root / "diagram.json"
+        model_path.write_text(json.dumps(self.model), encoding="utf-8")
+        with patch.object(sys, "argv", ["render.py", str(model_path), "--output", str(output), *options]):
+            main()
+
+    def test_cli_opens_html_only_after_both_artifacts_are_written(self):
+        html = self.output.with_name("Схема & заказ.html")
+        def verify_open(command, check):
+            self.assertTrue(check)
+            self.assertEqual(command, ["open", html.as_uri()])
+            self.assertIn('id="model"', html.read_text())
+            self.assertTrue(html.with_suffix(".mmd").read_text().startswith("flowchart"))
+        with patch("open_browser.sys.platform", "darwin"), \
+                patch("open_browser.subprocess.run", side_effect=verify_open) as opener, \
+                redirect_stdout(io.StringIO()):
+            self.run_cli(html)
+            self.model["title"] = "Updated diagram"
+            self.run_cli(html)
+        self.assertEqual(opener.call_count, 2)
+        self.assertIn("Updated diagram", html.read_text())
+
+    def test_cli_no_open_and_drawio_export_do_not_launch_browser(self):
+        html = self.output.with_suffix(".html")
+        with patch("open_browser.sys.platform", "darwin"), \
+                patch("open_browser.subprocess.run") as opener, redirect_stdout(io.StringIO()):
+            self.run_cli(html, "--no-open")
+            self.run_cli(self.output)
+        opener.assert_not_called()
+        self.assertTrue(html.is_file())
+        self.assertTrue(self.output.is_file())
+
+    def test_cli_render_failure_does_not_open_browser(self):
+        self.model["nodes"][0]["sources"][0]["line"] = 999
+        with patch("open_browser.sys.platform", "darwin"), \
+                patch("open_browser.subprocess.run") as opener, redirect_stderr(io.StringIO()), \
+                self.assertRaises(SystemExit) as failure:
+            self.run_cli(self.output.with_suffix(".html"))
+        self.assertEqual(failure.exception.code, 1)
+        opener.assert_not_called()
+
+    def test_cli_open_failure_reports_saved_html_and_keeps_artifacts(self):
+        html = self.output.with_suffix(".html")
+        errors = io.StringIO()
+        with patch("open_browser.sys.platform", "darwin"), \
+                patch("open_browser.subprocess.run", side_effect=subprocess.CalledProcessError(1, "open")), \
+                redirect_stdout(io.StringIO()), redirect_stderr(errors), \
+                self.assertRaises(SystemExit) as failure:
+            self.run_cli(html)
+        self.assertEqual(failure.exception.code, 1)
+        self.assertIn(str(html), errors.getvalue())
+        self.assertIn("browser could not be opened", errors.getvalue())
+        self.assertTrue(html.is_file())
+        self.assertTrue(html.with_suffix(".mmd").is_file())
 
     def test_legacy_mermaid_cannot_silently_lose_edges(self):
         self.model["mermaid"] = 'flowchart LR\n check --> save'

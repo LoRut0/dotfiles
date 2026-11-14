@@ -63,6 +63,8 @@ The `ai` profile also deploys `code-diagram` into `~/.codex/skills`. Its default
 branch generates an interactive offline HTML/Mermaid diagram from inspected code,
 with a contextual source panel, verified code links, guided paths and SVG/PNG
 export. JSON and `.mmd` are retained beside the HTML for follow-up edits.
+The renderer CLI automatically opens HTML in the default browser after generation
+or rerendering. Pass `--no-open` for headless/batch generation or saving files only.
 
 A second branch converts that model to editable `.drawio` only on explicit
 request, preserving the HTML/Mermaid originals and the graph's source references.

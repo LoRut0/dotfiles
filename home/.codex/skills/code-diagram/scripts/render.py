@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-"""Render an inspected code diagram as editable draw.io XML or offline HTML."""
+"""Render offline HTML and open it in the browser, or export editable draw.io XML."""
 import argparse
 import base64
 import copy
 import json
 from pathlib import Path
 import re
+import subprocess
 from urllib.parse import quote
 
 from drawio import render_drawio, validate_layout, page_models
+from open_browser import open_launcher as open_in_browser
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
 
@@ -192,14 +194,22 @@ def main():
     parser.add_argument("model", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--view", help="HTML view ID; defaults to the first view")
+    parser.add_argument("--no-open", action="store_true", help="save HTML without automatically opening the browser")
     args = parser.parse_args()
     if args.output.suffix.lower() not in (".drawio", ".html") or args.output.resolve() == args.model.resolve():
         parser.error("Output must be a separate .drawio or .html file")
     try:
         model = json.loads(args.model.read_text(encoding="utf-8"))
-        print(render(model, args.output, args.view))
+        output = render(model, args.output, args.view)
+        print(output, flush=True)
     except (ValueError, OSError, TypeError, KeyError) as exc:
         parser.exit(1, f"code-diagram: {exc}\n")
+    if output.suffix.lower() == ".html" and not args.no_open:
+        try:
+            open_in_browser(output)
+        except (OSError, RuntimeError, subprocess.CalledProcessError) as exc:
+            parser.exit(1, f"code-diagram: HTML saved at {output}, but the browser could not be opened: {exc}\n"
+                        "Use --no-open for generation without a browser.\n")
 
 
 if __name__ == "__main__":

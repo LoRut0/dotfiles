@@ -4,13 +4,25 @@ Use this branch for ordinary code visualization and follow-up edits. Produce the
 original interactive offline viewer, not a draw.io launcher. Keep `diagram.json`
 as the reusable model; read [the input contract](input.md) when authoring it.
 
-## Generate
+## Generate and open automatically
 
 Use the standard-library helper (Python 3.10+), substituting actual paths:
 
 ```sh
 python3 /path/to/code-diagram/scripts/render.py /path/to/diagram.json --output /path/to/diagram.html
 ```
+
+After successfully writing HTML and `.mmd`, this command opens the HTML in the
+default browser, including on rerendering. It uses the OS opener (`open` on macOS,
+`xdg-open` on Linux). No separate opening command is needed. Because it launches
+a GUI, use the required tool approval/escalation for this command when applicable.
+If the opener fails, the files remain saved and the CLI reports the opening error.
+
+Use `--no-open` when the user asks only to save files, for headless/batch generation,
+or when preparing artifacts before a separately approved GUI launch. For multiple
+views, generate background detail files with `--no-open` and automatically open
+the main/requested view. The Python `render()` function itself only writes files;
+callers importing it must open the final HTML separately when displaying it.
 
 The output embeds the vendored Mermaid runtime and model. It requires no internet,
 server or extension. Clicking a node opens the contextual panel with explanations,
@@ -30,14 +42,15 @@ helper renders only the first view unless selected explicitly, derives Mermaid
 from that view, and omits root paths; there is no built-in HTML page switcher.
 Do not silently deliver only an overview while claiming all details are included.
 
-## Verify and open
+## Verify and reopen
 
 Check Mermaid rendering, normal-size readability, node-to-panel mapping, panel
 scrolling, source `href` targets, route highlighting and export when browser
 inspection is available. Report only what was checked; do not launch code links
 as part of automated inspection.
 
-Open the resulting HTML in the default browser. On macOS:
+The CLI already opened the generated HTML. To view an existing file without
+regenerating it, or after a `--no-open` run, open it directly. On macOS:
 
 ```sh
 open '/absolute/path/diagram.html'
