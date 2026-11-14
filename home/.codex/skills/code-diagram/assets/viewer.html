@@ -40,6 +40,7 @@ main{display:block;padding:16px 32px 28px}main.has-details{display:grid;grid-tem
 <footer>Ссылки указывают на проверенные позиции при создании схемы и могут устареть после правок кода. <span id="root"></span></footer>
 <script id="model" type="application/json">__MODEL_JSON__</script>
 <script src="data:text/javascript;base64,__MERMAID_RUNTIME__"></script>
+<script id="diagram-zoom">__ZOOM_RUNTIME__</script>
 <script>
 (async () => {
   const model = JSON.parse(document.getElementById('model').textContent);
@@ -147,18 +148,17 @@ main{display:block;padding:16px 32px 28px}main.has-details{display:grid;grid-tem
     }
     let selectedPath = null;
     let stepIndex = -1;
-    let zoom = 1;
-    let fitted = true;
     const box = svg.viewBox.baseVal;
-    function resize() {
-      svg.style.width = box.width * zoom + 'px'; svg.style.height = box.height * zoom + 'px';
-      $('diagram').style.justifyContent = box.width * zoom > $('viewport').clientWidth ? 'flex-start' : 'center';
-      const step = selectedPath && stepIndex >= 0 ? ` · шаг ${stepIndex + 1}/${selectedPath.nodes.length}` : '';
-      $('status').textContent = `${model.nodes.length} блоков · ${Math.round(zoom*100)}%${step}`;
-    }
+    const zoomController = window.createDiagramZoom({svg, viewport: $('viewport'), diagram: $('diagram'),
+      plus: $('plus'), minus: $('minus'), fitButton: $('fit'), resetButton: $('readable'),
+      onChange(zoom) {
+        const step = selectedPath && stepIndex >= 0 ? ` · шаг ${stepIndex + 1}/${selectedPath.nodes.length}` : '';
+        $('status').textContent = `${model.nodes.length} блоков · ${Math.round(zoom*100)}%${step}`;
+      }});
+    function resize() { zoomController.refresh(); }
     function updateLayout() {
       requestAnimationFrame(() => {
-        if (fitted) fit(); else resize();
+        zoomController.relayout();
         if (window.matchMedia('(max-width:850px)').matches && selectedNodeId) {
           $('details-panel').scrollIntoView({behavior:'smooth',block:'start'});
         }
@@ -248,12 +248,7 @@ main{display:block;padding:16px 32px 28px}main.has-details{display:grid;grid-tem
       finally { URL.revokeObjectURL(url); }
     };
     $('download-svg').disabled = false; $('download-png').disabled = false;
-    function fit() { fitted = true; zoom = Math.min(1, Math.max(.15,$('viewport').clientWidth / box.width)); resize(); }
-    $('fit').onclick = fit;
-    $('plus').onclick = () => {fitted = false; zoom = Math.min(4,zoom*1.25); resize();};
-    $('minus').onclick = () => {fitted = false; zoom = Math.max(.15,zoom/1.25); resize();};
-    for (const id of ['fit','plus','minus']) $(id).disabled = false;
-    fit(); window.addEventListener('resize', () => { if (fitted) fit(); else resize(); });
+    zoomController.fit();
     document.body.dataset.ready = 'true';
   } catch (error) {
     $('status').textContent = 'Ошибка диаграммы'; $('error').style.display = 'block';

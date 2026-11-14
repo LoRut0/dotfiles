@@ -4,6 +4,7 @@ from contextlib import redirect_stderr, redirect_stdout
 import io
 import json
 import re
+import shutil
 from pathlib import Path
 import subprocess
 import sys
@@ -156,6 +157,12 @@ class RenderTests(unittest.TestCase):
             self.run_cli(html)
         self.assertEqual(opener.call_count, 2)
         self.assertIn("Updated diagram", html.read_text())
+
+    @unittest.skipUnless(shutil.which("node"), "Node is needed to test diagram zoom event handling")
+    def test_html_buttons_and_pinch_share_scale_and_anchor(self):
+        html = self.output.with_suffix(".html")
+        render(self.model, html)
+        subprocess.run(["node", str(Path(__file__).with_name("test_zoom.js")), str(html)], check=True)
 
     def test_cli_no_open_and_drawio_export_do_not_launch_browser(self):
         html = self.output.with_suffix(".html")

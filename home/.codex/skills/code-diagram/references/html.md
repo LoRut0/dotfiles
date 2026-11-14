@@ -30,6 +30,12 @@ source excerpts and verified `vscode://file` links. Named `paths` support highli
 and step-through; SVG/PNG export stays available. The helper also writes a sibling
 `diagram.mmd`. It does not create `.drawio` files.
 
+The `+`/`−` buttons and trackpad pinch over the diagram share one scale and percentage
+indicator. Pinch keeps the diagram point under the cursor in place where scrolling
+allows; ordinary scrolling and page zoom outside the diagram keep their browser
+behavior. `Fit` restores automatic fitting. The same controller supports Safari's
+gesture events as well as Ctrl+wheel pinch events in Chromium/Firefox.
+
 Supply `mermaid` when custom flowchart layout/subgraphs are useful; otherwise the
 helper derives it from `nodes` and `edges`. Preserve the original Mermaid styling
 on follow-up edits and keep node IDs and ordered edges consistent with metadata.
@@ -45,7 +51,8 @@ Do not silently deliver only an overview while claiming all details are included
 ## Verify and reopen
 
 Check Mermaid rendering, normal-size readability, node-to-panel mapping, panel
-scrolling, source `href` targets, route highlighting and export when browser
+scrolling, source `href` targets, route highlighting, alternating buttons/pinch,
+cursor anchoring, Fit after manual zoom, and export when browser
 inspection is available. Report only what was checked; do not launch code links
 as part of automated inspection.
 
