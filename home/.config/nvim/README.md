@@ -50,7 +50,8 @@ The sidebar opens files using their original paths. Workspace commands keep
 Neovim's working directory separate, so clangd can select each service's
 compilation database by file path.
 
-Press `/` to filter it, then `Enter` to browse the results with `j`/`k`.
+Press `/` to filter the tree, then `Enter` to focus the results. Use `n` and `N`
+to jump to the next or previous match. Use `j` and `k` to move through every row.
 The query remains active while you expand or collapse directories with `l`/`h`
 or `Enter`, and while you open files. Press `/` again to edit the query.
 Press `Esc` in the search field or in the filtered results to hide the field,

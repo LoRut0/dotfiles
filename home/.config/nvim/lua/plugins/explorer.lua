@@ -16,6 +16,45 @@ local function toggle_directory(picker, item)
   picker:find()
 end
 
+local function move_to_match(picker, direction)
+  local count = vim.v.count1
+  if not searching(picker) then
+    -- Keep LazyVim's normal search direction when the Explorer filter is off.
+    local key = (direction == 1) == (vim.v.searchforward == 1) and "n" or "N"
+    vim.cmd.normal({ args = { count .. key .. "zv" }, bang = true })
+    return
+  end
+
+  local list = picker.list
+  local size = list:count()
+  if size == 0 then
+    return
+  end
+  local wrap = vim.o.wrapscan
+  local step = list.reverse and -direction or direction
+  local distance = wrap and size or (step == 1 and size - list.cursor or list.cursor - 1)
+  local matches = {}
+  for offset = 1, distance do
+    local index = (list.cursor + offset * step - 1) % size + 1
+    local item = list:get(index)
+    if not item.child_match_only and (item.parent or not item.internal) then
+      matches[#matches + 1] = index
+      if #matches == count then
+        break
+      end
+    end
+  end
+
+  local target = matches[count]
+  if not target and wrap and #matches > 0 then
+    target = matches[(count - 1) % #matches + 1]
+  end
+  if target then
+    list:set_target(target, nil, { force = true })
+    list:render()
+  end
+end
+
 local function clear_filter(picker, item)
   item = item or picker._explorer_filter_origin
   local row = picker.list.cursor - picker.list.top
@@ -113,6 +152,12 @@ return {
             apply_filter = function(picker)
               picker:focus("list")
             end,
+            next_filter_match = function(picker)
+              move_to_match(picker, 1)
+            end,
+            prev_filter_match = function(picker)
+              move_to_match(picker, -1)
+            end,
             clear_filter = clear_filter,
             cancel_filter = function(picker, item)
               if not picker.input.filter:is_empty() or searching(picker) then
@@ -164,6 +209,8 @@ return {
               keys = {
                 ["/"] = "open_filter",
                 ["i"] = "open_filter",
+                ["n"] = "next_filter_match",
+                ["N"] = "prev_filter_match",
                 ["<Esc>"] = "cancel_filter",
                 ["<CR>"] = "confirm_filtered",
                 ["l"] = "confirm_filtered",
