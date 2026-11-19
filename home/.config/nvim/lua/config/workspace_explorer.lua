@@ -1,8 +1,8 @@
 local M = {}
 
-local function refresh(picker)
+local function refresh(picker, on_done)
   picker.list:set_target()
-  picker:find()
+  picker:find({ on_done = on_done })
 end
 
 local function watch_directories()
@@ -208,9 +208,9 @@ function M.options(workspace)
       return result
     end,
     actions = {
-      workspace_fold_root = function(picker, item, closed)
+      workspace_fold_root = function(picker, item, closed, on_done)
         workspace.collapsed[item.file] = closed or nil
-        refresh(picker)
+        refresh(picker, on_done)
       end,
       explorer_update = function(picker)
         for _, root in ipairs(workspace.folders) do

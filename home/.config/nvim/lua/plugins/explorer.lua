@@ -16,6 +16,49 @@ local function toggle_directory(picker, item)
   picker:find()
 end
 
+local function clear_filter(picker, item)
+  item = item or picker._explorer_filter_origin
+  local row = picker.list.cursor - picker.list.top
+  picker:norm(function()
+    if picker.closed then
+      return
+    end
+    picker._explorer_filter_origin = nil
+    picker._collapsed_search_dirs = nil
+    local filter = picker.input.filter
+    local had_filter = not filter:is_empty() or searching(picker)
+    if picker.input.win:valid() then
+      picker.input:set("", "")
+    else
+      filter.pattern, filter.search = "", ""
+    end
+    picker:toggle("input", { enable = false, focus = "list" })
+    if not had_filter then
+      return
+    end
+
+    local function restore_cursor()
+      if not item or picker.closed or not filter:is_empty() then
+        return
+      end
+      for candidate, index in picker:iter() do
+        if candidate.file == item.file and candidate.workspace_root == item.workspace_root then
+          picker.list:set_target(index, math.max(1, index - row), { force = true })
+          picker.list:render()
+          return
+        end
+      end
+    end
+    if item and item.parent then
+      require("snacks.explorer.tree"):show(item.file)
+      if item.workspace_root then
+        return picker.opts.actions.workspace_fold_root(picker, { file = item.workspace_root }, false, restore_cursor)
+      end
+    end
+    picker:find({ on_done = restore_cursor })
+  end)
+end
+
 return {
   "folke/snacks.nvim",
   init = function()
@@ -61,17 +104,21 @@ return {
             end
           end,
           actions = {
+            open_filter = function(picker, item)
+              if picker.input.filter:is_empty() then
+                picker._explorer_filter_origin = item
+              end
+              Snacks.picker.actions.focus_input(picker)
+            end,
             apply_filter = function(picker)
               picker:focus("list")
             end,
-            clear_filter = function(picker)
-              if picker.input:get() ~= "" then
-                picker._collapsed_search_dirs = nil
-                picker.input:set("", "")
-                picker:find()
-              else
-                picker:focus("list")
+            clear_filter = clear_filter,
+            cancel_filter = function(picker, item)
+              if not picker.input.filter:is_empty() or searching(picker) then
+                return clear_filter(picker, item)
               end
+              Snacks.picker.actions.cancel(picker)
             end,
             confirm_filtered = function(picker, item, action)
               if not searching(picker) then
@@ -115,6 +162,9 @@ return {
             },
             list = {
               keys = {
+                ["/"] = "open_filter",
+                ["i"] = "open_filter",
+                ["<Esc>"] = "cancel_filter",
                 ["<CR>"] = "confirm_filtered",
                 ["l"] = "confirm_filtered",
                 ["h"] = "close_filtered",
