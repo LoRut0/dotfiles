@@ -29,7 +29,27 @@ Neovim runs that checkout's `ya style` on the buffer before writing it. This
 uses the normal LazyVim autoformat toggle and keeps the edited file in sync
 with what is saved.
 
-The explorer opens at cwd with `\e` and at the project root with `\E`.
+## Explorer
+
+`\e` opens the selected workspace folders, or the current working directory
+when no workspace is active. `\E` opens the project root. Use either shortcut
+to switch the sidebar to that view.
+
+- `:WorkspaceAdd /path/to/folder` adds a folder. The first addition starts a
+  temporary workspace for the Neovim session. Omit the path for a prompt with
+  directory completion.
+- `:WorkspaceSave ~/workspaces/example.code-workspace` saves a temporary workspace.
+- `:WorkspaceOpen ~/workspaces/example.code-workspace` opens a saved VS Code
+  workspace. Neovim reads its local folder entries and their display names.
+- `:WorkspaceRemove` lets you select a folder to remove from the workspace.
+  For a saved workspace, adding and removing entries updates its `folders`
+  array on disk.
+- `:WorkspaceClose` closes the active workspace.
+
+The sidebar opens files using their original paths. Workspace commands keep
+Neovim's working directory separate, so clangd can select each service's
+compilation database by file path.
+
 Press `/` to filter it, then `Enter` to browse the results with `j`/`k`.
 The query remains active while you expand or collapse directories with `l`/`h`
 or `Enter`, and while you open files. Press `/` again to edit the query.

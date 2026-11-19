@@ -2,13 +2,15 @@ local function searching(picker)
   return picker.input.filter.meta.searching
 end
 
-local function collapsed(picker)
+local function collapsed(picker, item)
   picker._collapsed_search_dirs = picker._collapsed_search_dirs or {}
-  return picker._collapsed_search_dirs
+  local root = item.workspace_root or false
+  picker._collapsed_search_dirs[root] = picker._collapsed_search_dirs[root] or {}
+  return picker._collapsed_search_dirs[root]
 end
 
 local function toggle_directory(picker, item)
-  local dirs = collapsed(picker)
+  local dirs = collapsed(picker, item)
   dirs[item.file] = not dirs[item.file] or nil
   picker.list:set_target()
   picker:find()
@@ -16,9 +18,26 @@ end
 
 return {
   "folke/snacks.nvim",
+  init = function()
+    if not vim.g.vscode then
+      require("config.workspace").setup()
+    end
+  end,
   keys = {
-    { "<leader>e", function() Snacks.explorer() end, desc = "Explorer (cwd)" },
-    { "<leader>E", function() Snacks.explorer({ cwd = LazyVim.root() }) end, desc = "Explorer (Root Dir)" },
+    {
+      "<leader>e",
+      function()
+        require("config.workspace").explore()
+      end,
+      desc = "Explorer (Workspace or cwd)",
+    },
+    {
+      "<leader>E",
+      function()
+        require("config.workspace").explore(true)
+      end,
+      desc = "Explorer (Root Dir)",
+    },
   },
   opts = {
     picker = {
@@ -32,7 +51,7 @@ return {
             if ctx.filter:is_empty() then
               return
             end
-            for dir in pairs(collapsed(ctx.picker)) do
+            for dir in pairs(collapsed(ctx.picker, item)) do
               if item.file:sub(1, #dir + 1) == dir .. "/" then
                 return false
               end
@@ -56,6 +75,9 @@ return {
             end,
             confirm_filtered = function(picker, item, action)
               if not searching(picker) then
+                if item and item.workspace_top then
+                  return picker.opts.actions.workspace_fold_root(picker, item, item.open)
+                end
                 return require("snacks.explorer.actions").actions.confirm(picker, item, action)
               end
               if not item then
@@ -69,11 +91,18 @@ return {
             end,
             close_filtered = function(picker, item)
               if not searching(picker) then
+                if item and item.workspace_root then
+                  local dir = (item.workspace_top or (item.dir and item.open)) and item or item.parent
+                  if dir and dir.workspace_top then
+                    return picker.opts.actions.workspace_fold_root(picker, dir, true)
+                  end
+                  picker:set_cwd(item.workspace_root)
+                end
                 return require("snacks.explorer.actions").actions.explorer_close(picker, item)
               end
-              local dir = item and (item.dir and item.file or item.parent and item.parent.file)
-              if dir and not collapsed(picker)[dir] then
-                toggle_directory(picker, { file = dir })
+              local dir = item and (item.dir and item or item.parent)
+              if dir and not collapsed(picker, dir)[dir.file] then
+                toggle_directory(picker, dir)
               end
             end,
           },
