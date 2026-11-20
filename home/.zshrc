@@ -24,6 +24,9 @@ if [[ -o interactive && -z $TMUX && -t 1 &&
             # Keep the outer shell so its exit hook runs after the client detaches.
             tmux new-session
             exit $?
+        elif [[ -n $ALACRITTY_WINDOW_ID && $TERM == xterm-256color ]]; then
+            # Alacritty falls back to this generic TERM when its terminfo is missing.
+            exec tmux -T hyperlinks new-session
         else
             exec tmux new-session
         fi

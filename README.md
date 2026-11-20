@@ -248,6 +248,9 @@ moving `Alacritty.app` to `~/Applications` or `/Applications`, then apply the
 `mac` profile.
 
 A normal Alacritty window starts a new local tmux session automatically.
+With tmux 3.4+, hold `Shift` while hovering over a hyperlink to preview its
+destination, or `Shift` while clicking to open it. The automatic startup
+enables OSC 8 hyperlinks even when Alacritty reports `xterm-256color`.
 The Karabiner Fn layer opens Alacritty with `Fn+Q`; `Fn+Shift+Q` opens it without
 tmux (either Shift key works). These use the existing modifier rotation, where
 physical Left Option becomes Fn. To open an SSH window without a local tmux
