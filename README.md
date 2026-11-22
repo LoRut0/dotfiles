@@ -275,6 +275,14 @@ selecting bypasses application mouse reporting, so `Cmd+C` copies Alacritty's
 own selection. This also works while tmux mouse support is enabled. See the
 [Alacritty configuration reference](https://alacritty.org/config-alacritty.html).
 
+## Obsidian on macOS
+
+Install Obsidian with `brew install --cask obsidian`.
+
+In Obsidian, choose **Open folder as vault** and select `~/Notes`. Turn on
+**Vim key bindings** under **Settings → Editor → Advanced**. Obsidian saves
+this setting in the vault's `.obsidian` directory.
+
 ## Neovim
 
 The separate `nvim` profile links `home/.config/nvim` to `~/.config/nvim`,
