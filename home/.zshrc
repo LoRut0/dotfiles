@@ -43,9 +43,7 @@ fpath+=~/.zfunc
 # Init completion system (must be after fpath)
 autoload -Uz compinit && compinit
 
-# PATH changing
 export EDITOR=nvim
-[[ -d $HOME/.cargo/bin ]] && export PATH="$HOME/.cargo/bin:$PATH"
 
 # Created by newuser for 5.9
 
