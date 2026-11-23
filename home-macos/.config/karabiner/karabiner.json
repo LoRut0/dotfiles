@@ -75,7 +75,7 @@
                                         "optional": ["caps_lock"]
                                     }
                                 },
-                                "to": [{ "shell_command": "/opt/homebrew/bin/zellij terminal --working-directory \"$HOME\" </dev/null >/dev/null 2>&1 &" }],
+                                "to": [{ "shell_command": "/usr/bin/open -n -a \"$HOME/Applications/Zellij.app\" --args terminal --standalone --working-directory \"$HOME\"" }],
                                 "type": "basic"
                             },
                             {
