@@ -1,5 +1,10 @@
 theme "alacritty"
 
+terminal {
+    font "JetBrainsMono Nerd Font"
+    font_size 12
+}
+
 themes {
     alacritty {
         // Default palette from Alacritty 0.17.
