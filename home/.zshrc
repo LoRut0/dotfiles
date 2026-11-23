@@ -16,7 +16,7 @@ if [[ -e "$HOME/.dotter-linux-vm" ]] ||
     { [[ $OSTYPE == linux* ]] && (( $+commands[systemd-detect-virt] )) && systemd-detect-virt --quiet; }; then
     _dotfiles_vm_without_tmux=1
 fi
-if [[ -o interactive && -z $TMUX && -t 1 &&
+if [[ -o interactive && -z $TMUX && -z $ZELLIJ && -t 1 &&
       -z $NO_TMUX && -z $_dotfiles_vm_without_tmux && $TERM_PROGRAM != vscode ]] &&
     (( $+commands[tmux] )); then
     () {

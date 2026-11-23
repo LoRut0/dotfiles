@@ -253,8 +253,13 @@ destination, or `Shift` while clicking to open it. The automatic startup
 enables OSC 8 hyperlinks even when Alacritty reports `xterm-256color`.
 The Karabiner Fn layer opens Alacritty with `Fn+Q`; `Fn+Shift+Q` opens it without
 tmux (either Shift key works). These use the existing modifier rotation, where
-physical Left Option becomes Fn. To open an SSH window without a local tmux
-from a command, run this on Mac and then connect to the VM from it:
+physical Left Option becomes Fn. `Fn+Ctrl+Shift+Q` opens a native Zellij Terminal
+window when Zellij is installed through Homebrew. Press physical Left Option +
+Fn + Shift + Q with the modifier rotation enabled. Zsh skips tmux auto-start
+inside Zellij.
+
+To open an SSH window without a local tmux from a command, run this on Mac and
+then connect to the VM from it:
 
 ```sh
 open -na Alacritty --args -o 'env.NO_TMUX="1"'
