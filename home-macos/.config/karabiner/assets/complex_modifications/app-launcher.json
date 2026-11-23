@@ -144,7 +144,7 @@
           },
           "to": [
             {
-              "shell_command": "/usr/bin/open -n -a '/Users/lorut0/Applications/Alacritty.app'"
+              "shell_command": "/usr/bin/open -n -a '/Users/lorut0/Applications/Alacritty.app' --args -o 'window.decorations_theme_variant=\"Dark\"'"
             }
           ]
         },
@@ -164,7 +164,7 @@
           },
           "to": [
             {
-              "shell_command": "/usr/bin/open -n -a '/Users/lorut0/Applications/Alacritty.app' --args -o 'env.NO_TMUX=\"1\"'"
+              "shell_command": "/usr/bin/open -n -a '/Users/lorut0/Applications/Alacritty.app' --args -o 'window.decorations_theme_variant=\"Dark\"' -o 'env.NO_TMUX=\"1\"'"
             }
           ]
         }
