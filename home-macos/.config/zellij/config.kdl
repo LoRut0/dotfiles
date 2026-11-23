@@ -1,3 +1,13 @@
+keybinds {
+    unbind "Ctrl t"
+    tab {
+        bind "Ctrl a" { SwitchToMode "Normal"; }
+    }
+    shared_except "tab" "locked" {
+        bind "Ctrl a" { SwitchToMode "Tab"; }
+    }
+}
+
 theme "alacritty"
 default_shell "/Users/lorut0/.config/zellij/login-zsh"
 
