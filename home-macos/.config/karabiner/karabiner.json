@@ -75,7 +75,7 @@
                                         "optional": ["caps_lock"]
                                     }
                                 },
-                                "to": [{ "shell_command": "/usr/bin/open -n -a \"$HOME/Applications/Zellij.app\" --args terminal --standalone --working-directory \"$HOME\" --create \"term-$(/usr/bin/uuidgen | /usr/bin/cut -c 1-18)\"" }],
+                                "to": [{ "shell_command": "/usr/bin/open -n -a \"$HOME/Applications/Zellij.app\" --args terminal --standalone --working-directory \"$HOME\"" }],
                                 "type": "basic"
                             },
                             {
