@@ -144,7 +144,7 @@
           },
           "to": [
             {
-              "shell_command": "/usr/bin/open -n -a '/Users/lorut0/Applications/Alacritty.app' --args -o 'window.decorations_theme_variant=\"Dark\"'"
+              "shell_command": "/opt/homebrew/bin/zellij terminal --working-directory \"$HOME\" </dev/null >/dev/null 2>&1 &"
             }
           ]
         },
@@ -185,7 +185,7 @@
           },
           "to": [
             {
-              "shell_command": "/opt/homebrew/bin/zellij terminal --working-directory \"$HOME\" </dev/null >/dev/null 2>&1 &"
+              "shell_command": "/usr/bin/open -n -a '/Users/lorut0/Applications/Alacritty.app' --args -o 'window.decorations_theme_variant=\"Dark\"'"
             }
           ]
         }
