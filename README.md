@@ -251,8 +251,8 @@ A normal Alacritty window starts a new local tmux session automatically.
 With tmux 3.4+, hold `Shift` while hovering over a hyperlink to preview its
 destination, or `Shift` while clicking to open it. The automatic startup
 enables OSC 8 hyperlinks even when Alacritty reports `xterm-256color`.
-The Karabiner Fn layer opens a standalone Zellij window in the foreground with
-`Fn+Q`. Install `~/Applications/Zellij.app` with
+The Karabiner Fn layer opens a new Zellij session in a standalone foreground
+window with `Fn+Q`. Install `~/Applications/Zellij.app` with
 `zellij setup --install-desktop-entry`. Standalone windows use the same Zellij
 sessions and run without Zellij's menu bar icon and desktop notifications.
 `Fn+Ctrl+Shift+Q` opens Alacritty with tmux, and `Fn+Shift+Q` opens Alacritty
