@@ -1,0 +1,63 @@
+themes {
+    alacritty {
+        // Default palette from Alacritty 0.17.
+        text_unselected {
+            base "#d8d8d8"
+            background "#181818"
+            emphasis_0 "#f4bf75"
+            emphasis_1 "#6a9fb5"
+            emphasis_2 "#90a959"
+            emphasis_3 "#aa759f"
+        }
+        text_selected {
+            base "#f8f8f8"
+            background "#303030"
+            emphasis_0 "#feca88"
+            emphasis_1 "#82b8c8"
+            emphasis_2 "#aac474"
+            emphasis_3 "#c28cb8"
+        }
+        ribbon_unselected {
+            base "#d8d8d8"
+            background "#222222"
+            emphasis_0 "#f4bf75"
+            emphasis_1 "#82b8c8"
+            emphasis_2 "#aac474"
+            emphasis_3 "#c28cb8"
+        }
+        ribbon_selected {
+            base "#f8f8f8"
+            background "#32454d"
+            emphasis_0 "#feca88"
+            emphasis_1 "#93d3c3"
+            emphasis_2 "#aac474"
+            emphasis_3 "#c28cb8"
+        }
+        ribbon_hover {
+            base "#f8f8f8"
+            background "#303030"
+            emphasis_0 "#feca88"
+            emphasis_1 "#82b8c8"
+            emphasis_2 "#aac474"
+            emphasis_3 "#c28cb8"
+        }
+        terminal_colors {
+            black "#181818"
+            red "#ac4242"
+            green "#90a959"
+            yellow "#f4bf75"
+            blue "#6a9fb5"
+            magenta "#aa759f"
+            cyan "#75b5aa"
+            white "#d8d8d8"
+            bright_black "#6b6b6b"
+            bright_red "#c55555"
+            bright_green "#aac474"
+            bright_yellow "#feca88"
+            bright_blue "#82b8c8"
+            bright_magenta "#c28cb8"
+            bright_cyan "#93d3c3"
+            bright_white "#f8f8f8"
+        }
+    }
+}
