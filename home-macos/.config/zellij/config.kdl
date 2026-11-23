@@ -1,4 +1,5 @@
 theme "alacritty"
+default_shell "/Users/lorut0/.config/zellij/login-zsh"
 
 terminal {
     font "JetBrainsMono Nerd Font"

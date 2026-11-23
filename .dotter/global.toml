@@ -49,6 +49,7 @@ default_target_type = "symbolic"
 
 [zellij.files]
 "home-macos/.config/zellij/config.kdl" = "~/.config/zellij/config.kdl"
+"home-macos/.config/zellij/login-zsh" = "~/.config/zellij/login-zsh"
 "home-macos/.config/zellij/themes/alacritty.kdl" = "~/.config/zellij/themes/alacritty.kdl"
 
 [ssh_alacritty_url_handler.files]
