@@ -47,6 +47,9 @@ default_target_type = "symbolic"
 [alacritty.files]
 "home/.config/alacritty" = { target = "~/.config/alacritty", type = "symbolic", recurse = false }
 
+[zellij.files]
+"home-macos/.config/zellij/config.kdl" = "~/.config/zellij/config.kdl"
+
 [ssh_alacritty_url_handler.files]
 "scripts/ssh-alacritty-url-handler" = { target = "~/.local/share/ssh-alacritty-url-handler", type = "symbolic", recurse = false }
 
