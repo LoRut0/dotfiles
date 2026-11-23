@@ -10,9 +10,6 @@ default_target_type = "symbolic"
 [zsh_plugins.files]
 "home/.config/zsh-plugins" = { target = "~/.config/zsh-plugins", type = "symbolic", recurse = false }
 
-[vm_no_tmux.files]
-".dotter/markers/linux-vm" = "~/.dotter-linux-vm"
-
 [vm_zsh_fallback.files]
 "home-linux/.config/bash/zsh-default.bash" = "~/.config/bash/zsh-default.bash"
 
@@ -66,9 +63,6 @@ default_target_type = "symbolic"
 
 [claude.files]
 "home/.config/claude" = { target = "~/.config/claude", type = "symbolic", recurse = false }
-
-[tmux.files]
-"home/.config/tmux" = { target = "~/.config/tmux", type = "symbolic", recurse = false }
 
 [karabiner.files]
 "home-macos/.config/karabiner" = { target = "~/.config/karabiner", type = "symbolic", recurse = false }

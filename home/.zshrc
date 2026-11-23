@@ -2,37 +2,9 @@
 # (macOS wires its own agent to Keychain, so the eval lives in linux.zsh)
 clear
 
-# Register before tmux starts: pane shells belong to the tmux server, not Terminal.
-if [[ $OSTYPE == darwin* && -o interactive && -z $TMUX ]]; then
+if [[ $OSTYPE == darwin* && -o interactive ]]; then
     source "$HOME/.config/zsh/terminal-exit.zsh"
 fi
-
-# На Mac и Linux desktop каждый терминал получает отдельную сессию tmux.
-# Закрытие терминала оставляет сессию в фоне; Ctrl+A, s открывает список сессий.
-# Отключить: NO_TMUX=1. На VM это делает маркер профиля Dotter
-# или systemd-detect-virt, если профиль ещё не успел развернуться.
-typeset _dotfiles_vm_without_tmux=
-if [[ -e "$HOME/.dotter-linux-vm" ]] ||
-    { [[ $OSTYPE == linux* ]] && (( $+commands[systemd-detect-virt] )) && systemd-detect-virt --quiet; }; then
-    _dotfiles_vm_without_tmux=1
-fi
-if [[ -o interactive && -z $TMUX && -z $ZELLIJ && -t 1 &&
-      -z $NO_TMUX && -z $_dotfiles_vm_without_tmux && $TERM_PROGRAM != vscode ]] &&
-    (( $+commands[tmux] )); then
-    () {
-        if (( ${+_dotfiles_terminal_pid} )); then
-            # Keep the outer shell so its exit hook runs after the client detaches.
-            tmux new-session
-            exit $?
-        elif [[ -n $ALACRITTY_WINDOW_ID && $TERM == xterm-256color ]]; then
-            # Alacritty falls back to this generic TERM when its terminfo is missing.
-            exec tmux -T hyperlinks new-session
-        else
-            exec tmux new-session
-        fi
-    }
-fi
-unset _dotfiles_vm_without_tmux
 
 ZSH_PARTS="$HOME/.config/zsh"
 ZSH_PLUGINS_DIR="$HOME/.config/zsh-plugins"

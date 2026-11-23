@@ -1,5 +1,5 @@
 [terminal]
-# Accept copied text from remote tmux over SSH.
+# Accept clipboard writes from terminal applications, including over SSH.
 osc52 = "OnlyCopy"
 
 [font]

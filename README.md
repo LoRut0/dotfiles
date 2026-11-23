@@ -8,9 +8,9 @@ versioned profiles in `.dotter/profiles/`:
 
 | Profile | Purpose |
 | --- | --- |
-| `mac` | macOS workstation, including Karabiner, tmux, Arc mounts and `arc-compdb`; tmux starts automatically |
+| `mac` | macOS workstation, including Karabiner, Zellij, Arc mounts and `arc-compdb` |
 | `linux-desktop` | Full Linux desktop with Sway, Hyprland and bars |
-| `linux-vm` | Linux VM with Zsh as the login shell, Arc worktrees and `arc-compdb`; no automatic tmux startup |
+| `linux-vm` | Linux VM with Zsh as the login shell, Arc worktrees and `arc-compdb` |
 | `ai` | Claude and Codex configuration on macOS or Linux |
 | `vscode-arc` | Optional VS Code workspace helper for Arc checkouts on macOS or Linux |
 | `nvim` | Optional Neovim configuration on macOS or Linux |
@@ -23,14 +23,11 @@ bash dotter.sh linux-vm deploy
 ```
 
 Deploying `linux-vm` also changes the current user's login shell to Zsh with
-`chsh` when needed. The new shell is used from the next login, and the VM
-profile marker keeps `.zshrc` from starting tmux automatically. When `chsh`
+`chsh` when needed. The new shell is used from the next login. When `chsh`
 cannot update the account (for example, on an immutable VM image), the
 deployment adds a small startup fallback to the existing Bash profile files
 instead; interactive Bash is then replaced by a Zsh login shell while
 non-interactive scripts stay in Bash.
-
-All three machine profiles deploy the shared tmux configuration described below.
 
 Replace `linux-vm` with the desired profile. The wrapper downloads a pinned
 Dotter v0.13.5 executable for macOS ARM64 or Linux x86_64/ARM64 on first use,
@@ -169,77 +166,7 @@ is installed: `Ctrl+R` searches command history, `Ctrl+T` inserts selected paths
 It loads after vi-mode initializes to preserve these key bindings. Open a new
 shell after updating the configuration.
 
-## tmux
-
-The `mac`, `linux-desktop`, and `linux-vm` profiles all link `home/.config/tmux`
-to `~/.config/tmux`. This requires tmux 3.2+ and `/bin/zsh` and uses the same
-settings on every system:
-
-- `Ctrl+A` prefix; press it twice to send a literal `Ctrl+A` to the application.
-- `/bin/zsh` for new shells, mouse support, window/pane numbering from 1,
-  automatic window renumbering, and 50,000 lines of history for new panes.
-- Prefix then `c` opens a new window in the active pane's current directory.
-- Prefix then `h/j/k/l` to select panes; `%` or `|` split side by side, and
-  `"` or `-` split top and bottom, all in the active pane's current directory.
-- Prefix then `r` to reload `~/.config/tmux/tmux.conf`.
-- `screen-256color`, the truecolor override, and a 10 ms Escape delay.
-
-Drag with the mouse to select text. Releasing the button freezes the selection
-and leaves copy mode open. Double-click selects a word, triple-click selects a
-line; neither copies nor closes the selection automatically.
-
-| Copy-mode key | Action |
-| --- | --- |
-| `y` | Copy and keep the selection visible |
-| `Enter` | Copy and exit copy mode |
-| `Esc` or `q` | Exit without copying |
-| `v` / `V` | Begin a selection / select a whole line |
-| `Ctrl+V` | Toggle rectangular selection |
-
-For keyboard selection, enter copy mode with prefix then `[`, navigate with
-`h/j/k/l`, start selection with `v`, then copy. Prefix then `]` pastes the latest
-tmux buffer; prefix then `=` opens the buffer chooser. `Cmd+C` belongs to the
-terminal emulator; use `y` or `Enter` for a tmux selection.
-
-The clipboard adapter uses `pbcopy` on macOS, `wl-copy` on Wayland, or
-`xclip`/`xsel` with the X11 clipboard. Install the matching Linux utility separately
-if needed. On headless hosts, tmux still keeps its own buffer and emits OSC 52
-to the attached terminal. OSC 52 reception is enabled for applications such as
-Neovim and nested tmux sessions, and a hook forwards received text to an available
-local desktop clipboard.
-
-On Mac and Linux desktop, each ordinary interactive terminal automatically creates
-an independent tmux session with its own windows and panes. Closing the terminal
-leaves its session and running processes in the background. Press `Ctrl+A`, then
-`s` in another terminal to select a saved session; prefix then `$` renames it.
-The VM profile leaves startup manual. Set `NO_TMUX=1` for a new terminal
-to skip the local tmux, for example when you want **terminal on Mac → SSH → tmux
-on VM** with a single tmux layer. See the Alacritty command below.
-
-Copying with `y` or `Enter` in the VM's tmux requires a terminal that accepts
-OSC 52 clipboard writes. The deployed Alacritty configuration explicitly enables
-this with `terminal.osc52 = "OnlyCopy"`. For iTerm2, enable **Settings → General → Selection →
-Applications in terminal may access clipboard**. The terminal then updates the
-Mac clipboard directly over the existing SSH connection; no local tmux is
-needed. See the [iTerm2 settings documentation](https://iterm2.com/documentation-preferences-general.html)
-and [tmux clipboard documentation](https://github.com/tmux/tmux/wiki/Clipboard).
-
-Terminal.app does not itself support OSC 52. To keep Terminal.app with only a
-remote tmux, it needs a local clipboard adapter such as
-[osc52pty](https://github.com/roy2220/osc52pty), installed separately. The existing
-tmux clipboard hook also supports deliberately nested sessions: the outer tmux
-on Mac receives the remote copy and passes it to `pbcopy`.
-
-In nested tmux, the first `Ctrl+A` reaches the outer server. To send a command
-to the inner server, press `Ctrl+A`, `Ctrl+A`, then the command key.
-
-After deploying the machine profile, run
-`tmux source-file ~/.config/tmux/tmux.conf` on each existing server; future servers
-load it automatically. This does not replace shells already running in panes or
-increase the history retained by existing panes on older tmux versions. The VM
-profile leaves tmux startup manual.
-
-### Alacritty on Mac
+## Zellij and Alacritty on macOS
 
 The `mac` profile already deploys `~/.config/alacritty/alacritty.toml`. Install
 Alacritty separately using the DMG from the
@@ -247,38 +174,24 @@ Alacritty separately using the DMG from the
 moving `Alacritty.app` to `~/Applications` or `/Applications`, then apply the
 `mac` profile.
 
-A normal Alacritty window starts a new local tmux session automatically.
-With tmux 3.4+, hold `Shift` while hovering over a hyperlink to preview its
-destination, or `Shift` while clicking to open it. The automatic startup
-enables OSC 8 hyperlinks even when Alacritty reports `xterm-256color`.
 The Karabiner Fn layer opens a new Zellij session in a standalone foreground
 window with `Fn+Q`. Install `~/Applications/Zellij.app` with
 `zellij setup --install-desktop-entry`. Standalone windows use the same Zellij
 sessions and run without Zellij's menu bar icon and desktop notifications.
-`Fn+Ctrl+Shift+Q` opens Alacritty with tmux, and `Fn+Shift+Q` opens Alacritty
-without tmux. The modifier rotation maps physical Left Option to Fn and physical
-Fn to Ctrl. Zsh skips tmux auto-start inside Zellij.
-
-To open an SSH window without a local tmux from a command, run this on Mac and
-then connect to the VM from it:
-
-```sh
-open -na Alacritty --args -o 'env.NO_TMUX="1"'
-```
+`Fn+Shift+Q` opens an Alacritty window running Zsh directly. The modifier rotation
+maps physical Left Option to Fn and physical Fn to Ctrl.
 
 The `mac` profile also builds a small local URL handler in `~/Applications`
 and registers it for `ssh://` links. It opens each link as `ssh` in a new
-Alacritty window, without the local tmux auto-attach. To refresh just this
-handler after editing it, run:
+Alacritty window. Refresh the handler after editing it with the following command.
 
 ```sh
 bash scripts/ssh-alacritty-url-handler/install.sh
 ```
 
-In the VM's tmux, select text and press `y` or `Enter`; Alacritty writes the text
-to the Mac clipboard through OSC 52. For visible text, holding `Shift` while
-selecting bypasses application mouse reporting, so `Cmd+C` copies Alacritty's
-own selection. This also works while tmux mouse support is enabled. See the
+Alacritty accepts OSC 52 clipboard writes from terminal applications, including
+over SSH. Hold `Shift` while selecting text to bypass application mouse
+reporting, then press `Cmd+C` to copy Alacritty's selection.
 [Alacritty configuration reference](https://alacritty.org/config-alacritty.html).
 
 ## Obsidian on macOS
@@ -507,15 +420,12 @@ their own saved view options may need Snap to Grid selected separately in
 
 ## Terminal on macOS
 
-New Terminal shells register an exit hook before attaching to tmux. When the
-outer shell exits (including after tmux detaches), a detached helper waits for
-its `login` process to end and requests a normal quit of that Terminal PID only
-if it has no remaining child processes. This also handles separate instances
-started by Karabiner with `open -n`; other windows with live sessions keep their
-instance running. Nested shells and tmux panes do not register the hook.
-
-The configuration takes effect in newly opened terminals; existing tmux clients
-started with `exec` need their Terminal instance closed manually once.
+The login shell for a Terminal.app window registers an exit hook. When the shell
+exits, a detached helper waits for its `login` process to end and requests a
+normal quit of that Terminal PID only if it has no remaining child processes.
+This also handles separate instances started by Karabiner with `open -n`.
+Other windows with live sessions keep their instance running. The configuration
+takes effect in newly opened terminals.
 
 ## packages
 

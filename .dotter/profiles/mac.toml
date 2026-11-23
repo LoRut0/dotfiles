@@ -13,6 +13,5 @@ packages = [
   "kitty",
   "vifm",
   "vlc",
-  "tmux",
   "karabiner",
 ]
