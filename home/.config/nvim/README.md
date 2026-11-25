@@ -65,10 +65,12 @@ clear the filter, and keep the cursor on the same file or folder in the tree.
 ## Codex
 
 In terminal Neovim, install the Codex CLI on the machine running Neovim.
-`\ax` opens Codex in a Snacks terminal on the right; `\ab` adds the current
-file, and visual `\as` adds the selected line range. The same actions are
-available as `:Codex` and `:CodexHere`. Codex starts in Neovim's current
-working directory (`:pwd`).
+`\ax` opens or hides the Codex split on the right, including from the chat
+prompt. Hiding the split keeps the session running. If the chat is visible in
+another tab, `\ax` focuses it there. `:Codex` opens the chat in
+Neovim's current working directory (`:pwd`) or shows the existing session.
+`\ab` adds the current file, and visual `\as` adds the selected line range.
+Both use `:CodexHere`.
 
 In VS Code, the same shortcuts use the Codex extension (`openai.chatgpt`).
 `\ax` opens its sidebar, `\ab` adds the current file to the chat, and visual

@@ -1,3 +1,15 @@
+local terminal
+
+local function toggle()
+  if not terminal or not terminal:valid() then
+    require("codex").open()
+  elseif terminal:on_current_tab() then
+    terminal:hide()
+  else
+    terminal:focus()
+  end
+end
+
 return {
   "dimfeld/codex.nvim",
   dependencies = { "folke/snacks.nvim" },
@@ -6,7 +18,7 @@ return {
   end,
   cmd = { "Codex", "CodexHere" },
   keys = {
-    { "<leader>ax", "<cmd>Codex<cr>", desc = "Open Codex" },
+    { "<leader>ax", toggle, desc = "Toggle Codex" },
     { "<leader>ab", "<cmd>CodexHere<cr>", desc = "Add current file to Codex" },
     { "<leader>as", ":'<,'>CodexHere<cr>", mode = "x", desc = "Add selection range to Codex" },
   },
@@ -16,7 +28,11 @@ return {
     end,
     win = {
       wo = { wrap = true },
+      keys = {
+        toggle_codex = { "<leader>ax", "hide", mode = "t", desc = "Toggle Codex" },
+      },
       on_win = function(term)
+        terminal = term
         -- Neovim resets 'wrap' when the terminal job starts, after Snacks sets the window options.
         vim.api.nvim_create_autocmd("TermOpen", {
           group = term.augroup,
