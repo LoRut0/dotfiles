@@ -14,4 +14,5 @@ return {
     "nvim-mini/mini.pairs",
     enabled = false,
   },
+  { "kristijanhusak/vim-dadbod-ui", enabled = false },
 }
