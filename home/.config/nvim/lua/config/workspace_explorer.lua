@@ -87,14 +87,12 @@ function M.options(workspace)
       local find
       if exists then
         watched[root.path] = true
-      end
-      if exists and (search or not workspace.collapsed[root.path]) then
         local scoped = ctx:clone()
         scoped.filter = ctx.filter:clone()
         scoped.filter:set_cwd(root.path)
-        find = explorer.explorer(opts, scoped)
+        find = require("config.arc_explorer").finder(opts, scoped, not search and workspace.collapsed[root.path])
       end
-      finders[i] = { root = root, find = find, exists = exists }
+      finders[i] = { root = root, find = find }
     end
     sync_watches(ctx.picker, watched, true)
     return function(cb)
@@ -134,7 +132,7 @@ function M.options(workspace)
             text = root.path,
             dir = true,
             open = false,
-            comment = not entry.exists and "[unavailable]" or nil,
+            comment = "[unavailable]",
           })
         end
       end

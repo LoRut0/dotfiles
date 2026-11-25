@@ -125,6 +125,7 @@ return {
     picker = {
       sources = {
         explorer = {
+          finder = require("config.arc_explorer").finder,
           hidden = false,
           ignored = {},
           -- Following an opened file would clear the active explorer search.

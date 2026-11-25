@@ -35,6 +35,11 @@ with what is saved.
 when no workspace is active. `\E` opens the project root. Use either shortcut
 to switch the sidebar to that view.
 
+In Arcadia, the tree marks files reported by `arc status`, including staged
+changes and untracked files. Collapsed folders show a marker when they contain
+changes. Use `]g` and `[g` to jump between changed files, or `u` to refresh
+after running Arc commands in another terminal.
+
 - `:WorkspaceAdd /path/to/folder` adds a folder. The first addition starts a
   temporary workspace for the Neovim session. Omit the path for a prompt with
   directory completion.
