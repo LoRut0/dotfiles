@@ -56,7 +56,7 @@ local function remote(opts, ctx, files)
     vim.list_extend(args, { "-n", "--", pattern })
   end
 
-  return require("snacks.picker.source.proc").proc(ctx:opts({
+  local proc_opts = ctx:opts({
     cmd = ya,
     args = args,
     cwd = cwd,
@@ -78,7 +78,8 @@ local function remote(opts, ctx, files)
         item.line = text
       end
     end,
-  }), ctx)
+  })
+  return require("snacks.picker.source.proc").proc(proc_opts, ctx)
 end
 
 function M.grep(opts, ctx)
@@ -90,6 +91,10 @@ function M.files(opts, ctx)
 end
 
 function M.configure(opts)
+  -- Workspace searches supply their own local or multi-folder finder.
+  if type(opts.finder) ~= "string" then
+    return
+  end
   if M.find_root(opts.cwd or vim.uv.cwd()) then
     local files = opts.source == "files"
     opts.finder = files and M.files or M.grep

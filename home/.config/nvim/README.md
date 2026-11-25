@@ -8,16 +8,23 @@ inline delimiters. Markdown rendering and syntax concealment are disabled.
 
 ## Search
 
-The leader key is `\`. `\sg` searches the current working directory;
-`\sG` and `\/` search the project root. Use `:pwd` and `:LazyRoot` to
-inspect those directories.
+The leader key is `\`.
 
-Inside an Arc checkout or worktree (detected by its `.arc` marker), text,
-word, and file searches use `ya grep --remote` with the selected directory
-as their scope. Results come from **trunk**, so local edits and branch-only
-files are not indexed; opening a result uses the corresponding local file.
-Each query returns at most 1,000 results. The search runs the `ya` executable
-from the current Arc checkout, even when Yazi's `ya` is first on `PATH`.
+| Shortcut | Search scope |
+| --- | --- |
+| `\sg` | Search workspace files on disk with ripgrep, including saved edits and new, non-ignored files. |
+| `\sG` | Search indexed trunk with `ya grep --remote` in each Arcadia workspace folder. |
+| `\sA` | Enter an Arcadia directory to search on trunk. The prompt starts at the checkout root. Accept it to search all of Arcadia, or enter a subdirectory. |
+
+Workspace folders come from `:WorkspaceOpen` or `:WorkspaceAdd`. With no
+active workspace, `\sg` and `\sG` use the current window's working directory
+(`:pwd`). To search locally from an Arcadia mount, select a service or library
+folder. Local search skips the mount root.
+
+Inside Arcadia, `\/` searches trunk at the project root (`:LazyRoot`).
+Word and file searches also use the checkout's `ya grep --remote`. Each
+remote query returns up to 1,000 results. Opening a result opens the file
+in your checkout.
 
 File search (`\ff` for cwd, `\fF` or `\<Space>` for the root) waits for a
 query instead of scanning the checkout. Type a path fragment; space-separated

@@ -13,8 +13,27 @@ return {
     keys = {
       { "<leader>ff", LazyVim.pick("files", { root = false }), desc = "Find Files (cwd)" },
       { "<leader>fF", LazyVim.pick("files"), desc = "Find Files (Root Dir)" },
-      { "<leader>sg", LazyVim.pick("live_grep", { root = false }), desc = "Grep (cwd)" },
-      { "<leader>sG", LazyVim.pick("live_grep"), desc = "Grep (Root Dir)" },
+      {
+        "<leader>sg",
+        function()
+          require("config.workspace_search").grep(false)
+        end,
+        desc = "Grep Workspace (local)",
+      },
+      {
+        "<leader>sG",
+        function()
+          require("config.workspace_search").grep(true)
+        end,
+        desc = "Grep Workspace (Arcadia trunk)",
+      },
+      {
+        "<leader>sA",
+        function()
+          require("config.workspace_search").arcadia_folder()
+        end,
+        desc = "Grep Arcadia Folder (trunk)",
+      },
     },
   },
 }

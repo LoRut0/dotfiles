@@ -201,6 +201,28 @@ local function open_at_file(opts, folders, path)
   return picker
 end
 
+local function reload_folders()
+  if active and active.path then
+    checked(function(path)
+      local folders = load_folders(path).folders
+      if not vim.deep_equal(active.folders, folders) then
+        active.folders = folders
+        refresh_views()
+      end
+    end, active.path)
+  end
+end
+
+function M.roots()
+  if not active then
+    return { file.path(vim.fn.getcwd(0)) }
+  end
+  reload_folders()
+  return vim.tbl_map(function(folder)
+    return folder.path
+  end, active.folders)
+end
+
 function M.explore(project)
   local view = project and "project" or (active and "workspace" or "cwd")
   local current = Snacks.picker.get({ source = "explorer" })[1]
@@ -215,12 +237,7 @@ function M.explore(project)
   if project then
     opts.cwd = LazyVim.root()
   elseif active then
-    if active.path then
-      checked(function(path)
-        active.folders = load_folders(path).folders
-        refresh_views()
-      end, active.path)
-    end
+    reload_folders()
     opts = require("config.workspace_explorer").options(active)
   end
   opts.explorer_view = view
