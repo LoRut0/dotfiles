@@ -89,6 +89,9 @@ for Neovim 0.12's `:lsp restart` command.
 
 ## Changes
 
+The bottom-left statusline shows the Git or Arc branch just after the mode.
+It follows the active file, the folder in Explorer, or the Codex working directory.
+
 When you open a text file in Arcadia, the gutter marks added, changed, and
 deleted lines relative to the current branch's `HEAD`. Signs update as you
 type and include staged changes. New, untracked files show added lines.
