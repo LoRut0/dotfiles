@@ -84,6 +84,11 @@ for Neovim 0.12's `:lsp restart` command.
 
 ## Changes
 
+When you open a text file in Arcadia, the gutter marks added, changed, and
+deleted lines relative to the current branch's `HEAD`. Signs update as you
+type and include staged changes. New, untracked files show added lines.
+Use `]h` and `[h` to jump between changes and `\ghp` to toggle an inline diff.
+
 `\gs` opens working changes; `\gB` shows committed changes on the current
 branch. In Git, Diffview provides a changed-files panel and side-by-side diffs;
 the working file on the right is editable and can be saved normally.
