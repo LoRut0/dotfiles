@@ -56,16 +56,16 @@ local function attach(buf)
       end
     end, { buffer = buf, desc = direction == "next" and "Next Hunk" or "Prev Hunk" })
   end
-  vim.keymap.set("n", "<leader>ghp", function()
+  vim.keymap.set("n", "<leader>uo", function()
     MiniDiff.toggle_overlay(buf)
-  end, { buffer = buf, desc = "Toggle Arc Diff Inline" })
+  end, { buffer = buf, desc = "Toggle Arc Diff Overlay" })
   refresh()
 end
 
 local function detach(buf)
   pending[buf] = nil
   vim.api.nvim_clear_autocmds({ group = group, buffer = buf })
-  for _, key in ipairs({ "[h", "]h", "<leader>ghp" }) do
+  for _, key in ipairs({ "[h", "]h", "<leader>uo" }) do
     vim.keymap.del("n", key, { buffer = buf })
   end
 end
