@@ -7,6 +7,13 @@ if vim.g.vscode then
   return
 end
 
+-- Free the UI prefix previously used by LazyVim's indent guides toggle.
+vim.keymap.del("n", "<leader>ug")
+Snacks.toggle.get("indent"):map("<leader>u|")
+Snacks.util.on_module("which-key", function()
+  require("which-key").add({ { "<leader>ug", group = "Git / Arc" } })
+end)
+
 vim.keymap.set("n", "gb", "<C-o>", { desc = "Go Back" })
 vim.keymap.set("n", "gB", "<C-i>", { desc = "Go Forward" })
 

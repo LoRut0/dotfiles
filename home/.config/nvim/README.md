@@ -92,7 +92,11 @@ for Neovim 0.12's `:lsp restart` command.
 When you open a text file in Arcadia, the gutter marks added, changed, and
 deleted lines relative to the current branch's `HEAD`. Signs update as you
 type and include staged changes. New, untracked files show added lines.
-Use `]h` and `[h` to jump between changes and `\uo` to toggle the inline diff overlay.
+Use `]h` and `[h` to jump between changes.
+
+Press `\ug` to open the **Git / Arc** UI group. `\ugs` toggles Git gutter
+signs and `\ugo` toggles the inline diff overlay in an Arc buffer.
+Indent guides are available under `\u|`.
 
 `\gs` opens working changes; `\gB` shows committed changes on the current
 branch. In Git, Diffview provides a changed-files panel and side-by-side diffs;
