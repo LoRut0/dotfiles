@@ -15,7 +15,15 @@ return {
       return vim.fn.getcwd(0)
     end,
     win = {
+      wo = { wrap = true },
       on_win = function(term)
+        -- Neovim resets 'wrap' when the terminal job starts, after Snacks sets the window options.
+        vim.api.nvim_create_autocmd("TermOpen", {
+          group = term.augroup,
+          buffer = term.buf,
+          once = true,
+          command = "setlocal wrap",
+        })
         vim.api.nvim_create_autocmd("WinLeave", {
           group = term.augroup,
           buffer = term.buf,
