@@ -32,8 +32,10 @@ with what is saved.
 ## Explorer
 
 `\e` opens the selected workspace folders, or the current working directory
-when no workspace is active. `\E` opens the project root. Use either shortcut
-to switch the sidebar to that view.
+when no workspace is active. `\E` opens the project root. Both shortcuts
+expand the tree to the file in the focused editor and select it. If the file
+is outside the view's roots, the sidebar opens at its containing directory for
+that invocation. Press the same shortcut again to close the sidebar.
 
 In Arcadia, the tree marks files reported by `arc status`, including staged
 changes and untracked files. Collapsed folders show a marker when they contain

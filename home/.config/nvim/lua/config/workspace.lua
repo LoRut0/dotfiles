@@ -155,6 +155,52 @@ function M.setup()
   end, { desc = "Close workspace" })
 end
 
+local function open_at_file(opts, folders, path)
+  -- Prefer the most specific folder when workspace roots overlap.
+  local realpath = file.path(path)
+  local root, target
+  for _, folder in ipairs(folders) do
+    local relative = vim.fs.relpath(folder.path, path) or vim.fs.relpath(file.path(folder.path), realpath)
+    if relative and (not root or #folder.path > #root) then
+      root, target = folder.path, vim.fs.joinpath(folder.path, relative)
+    end
+  end
+  if not root then
+    root, target = vim.fs.dirname(path), path
+    opts = { cwd = root, explorer_view = opts.explorer_view }
+  elseif opts.workspace_id then
+    active.collapsed[root] = nil
+  end
+
+  -- Reveal this path even through hidden or ignored parents.
+  opts.include = { target }
+  for parent in vim.fs.parents(target) do
+    if parent == root then
+      break
+    end
+    table.insert(opts.include, parent)
+  end
+  require("snacks.explorer.tree"):show(target)
+  local picker = Snacks.explorer(opts)
+  -- Git and Arc can refresh the list asynchronously during the initial find.
+  picker.matcher.opts.on_done = function(matcher)
+    if picker.closed or picker:is_active() then
+      return
+    end
+    matcher.opts.on_done = nil
+    if not picker.input.filter:is_empty() then
+      return
+    end
+    for item, index in picker:iter() do
+      if item.file == target and (not opts.workspace_id or item.workspace_root == root) then
+        picker.list:view(index)
+        break
+      end
+    end
+  end
+  return picker
+end
+
 function M.explore(project)
   local view = project and "project" or (active and "workspace" or "cwd")
   local current = Snacks.picker.get({ source = "explorer" })[1]
@@ -178,6 +224,11 @@ function M.explore(project)
     opts = require("config.workspace_explorer").options(active)
   end
   opts.explorer_view = view
+  local path = vim.api.nvim_buf_get_name(0)
+  if vim.bo.buftype == "" and vim.fn.filereadable(path) == 1 then
+    local folders = opts.workspace_id and active.folders or { { path = opts.cwd or vim.fn.getcwd(0) } }
+    return open_at_file(opts, folders, path)
+  end
   return Snacks.explorer(opts)
 end
 
